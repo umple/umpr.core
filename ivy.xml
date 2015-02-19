@@ -1,8 +1,8 @@
 <ivy-module version="2.0">
     <info organisation="org.umple" module="umple-downloader"/>
     <dependencies>
-        <dependency org="org.jsoup" name="jsoup" rev="1.7.2"/>
-        <dependency org="commons-io" name="commons-io" rev="2.4"/>
-        
+        <dependency org="org.jsoup" name="jsoup" rev="1.7.2" />
+        <dependency org="commons-io" name="commons-io" rev="2.4" />
+        <dependency org="com.google.guava" name="guava" rev="18.0"/>
     </dependencies>
 </ivy-module>

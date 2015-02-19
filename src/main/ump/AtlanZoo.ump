@@ -1,0 +1,20 @@
+
+use DownloadSpec.ump;
+
+namespace org.umple.sample.downloader;
+
+class AtlanZoo {
+
+  isA DownloadSpec;
+  
+  depend java.net.URL, java.util.List;
+  
+  
+  
+  URL baseName = SpecUtil.createUrl("http://www.emn.fr/z-info/atlanmod/index.php/Ecore");
+  
+  FileType fileType = FileType.XMI;
+
+  List<URL> resources = new ArrayList<>();
+  
+}

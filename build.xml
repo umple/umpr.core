@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="umple.sample.downloader" default="all">
+  
+  
+  <property file="build.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <property name="version" value="0.0.0" />
+
+  <property name="output.dir" value="./bin" />
+  <property name="test.output.dir" value="./test-bin/"/>
+
+  <property name="src.dir" value="./src/main/java" />
+  <property name="test.src.dir" value="./src/test/java"/>
+  
+  <!-- Modules -->
+  
+  
+  <!-- Module umple.sample.downloader -->
+  
+  <dirname property="module.basedir" file="${ant.file}"/>
+
+  <target name="resolve" description="--> retrieve dependencies with ivy">
+    <ivy:resolve />
+    <ivy:retrieve sync="true" type="jar" />
+    <ivy:cachepath pathid="build.path"/>
+  </target>
+
+  <target name="compile" depends="init" description="Compile core code">
+    <mkdir dir="${output.dir}/classes" />
+    <javac srcdir="${src.dir}" destdir="${output.dir}/classes" >
+      <classpath refid="build.path" />
+      <exclude name="**/.git" />
+      <exclude name="**/.svn" />
+    </javac>
+  </target>
+
+  <target name="test.compile" depends="init, compile" description="Compile test code">
+    <mkdir dir="${test.output.dir}/classes" />
+    <javac srcdir="${test.src.dir}" destdir="${test.output.dir}" >
+      <classpath refid="build.path" />
+      <exclude name="**/.git" />
+      <exclude name="**/.svn" />
+    </javac>
+  </target>
+
+  <target name="package" depends="compile" description="Compile and create jars">
+    <jar destfile="${output.dir}/jars/${ant.project.name}-${version}.jar"
+         basedir="${output.dir}/classes" />
+  </target>
+  
+  <target name="tests" depends="" description="compile module umple.sample.downloader; test classes" unless="skip.tests">
+
+  </target>
+
+  <target name="clean" description="cleanup module">
+    <delete dir="${output.dir}"/>
+    <delete dir="${test.output.dir}"/>
+  </target>
+
+  <target name="init" description="Build initialization" depends="resolve">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+
+  <target name="build.modules" depends="init, clean, compile" description="build all modules"/>
+  
+  <target name="all" depends="build.modules" description="build all"/>
+</project>
