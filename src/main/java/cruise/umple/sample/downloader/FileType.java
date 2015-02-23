@@ -1,4 +1,4 @@
-package org.umple.sample.downloader;
+package cruise.umple.sample.downloader;
 
 public enum FileType {
 
