@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 /**
  * Implementation of {@link DocumentFactory}.
  */
-public class RealDocumentProvider implements DocumentFactory {
+public class RealDocumentFactory implements DocumentFactory {
 
     @Inject
     private Logger logger;

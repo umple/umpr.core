@@ -3,7 +3,7 @@ package cruise.umple.sample.downloader;
 import com.google.inject.Inject;
 import static org.testng.Assert.*;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.testng.annotations.BeforeClass;
@@ -11,13 +11,12 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 
 /**
- * Test {@link RealDocumentProvider}.
+ * Test {@link RealDocumentFactory}.
  */
 @Guice(modules = DownloaderModule.class)
 public class DocumentProviderTest {
@@ -35,11 +34,8 @@ public class DocumentProviderTest {
             ZOO_FILE = File.createTempFile("AtlanMod-Zoo", ".html");
             ZOO_FILE.deleteOnExit();
 
-            byte[] data = IOUtils.toByteArray(new URL(ZOO_URL));
-            ZOO_FILE_CONTENT = Jsoup.connect(ZOO_URL).timeout(30 * 1000).get().toString();
-            try (FileOutputStream fos = new FileOutputStream(ZOO_FILE)) {
-                IOUtils.write(data, fos);
-            }
+            FileUtils.copyURLToFile(new URL(ZOO_URL), ZOO_FILE);
+            ZOO_FILE_CONTENT = Jsoup.parse(ZOO_FILE, "utf-8").toString();
         } catch (IOException ioe) {
             // fail if we can't create the file
             throw new RuntimeException(ioe);
