@@ -1,20 +1,22 @@
 package cruise.umple.sample.downloader.repositories;
 
-import com.google.inject.Inject;
-import cruise.umple.sample.downloader.DocumentFactory;
-import cruise.umple.sample.downloader.FileType;
-import cruise.umple.sample.downloader.Repository;
-import cruise.umple.sample.downloader.util.Networks;
-import cruise.umple.sample.downloader.util.Pair;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+
+import com.google.inject.Inject;
+
+import cruise.umple.sample.downloader.DocumentFactory;
+import cruise.umple.sample.downloader.FileType;
+import cruise.umple.sample.downloader.Repository;
+import cruise.umple.sample.downloader.util.Networks;
+import cruise.umple.sample.downloader.util.Pair;
 
 /**
  * Created by kevin on 15-02-23.
@@ -41,6 +43,13 @@ class AtlanZooRepository implements Repository {
     @Override
     public String getName() {
         return "AtlanZooEcore";
+    }
+    
+    @Override
+    public String getDescription() {
+      return "The Metamodel Zoos are a collaborative open source research effort intended to produce experimental "
+          + "material that may be used by all in the domain of Model Driven Engineering.\n"
+          + "This Repository uses the eCore version located at: http://www.emn.fr/z-info/atlanmod/index.php/Ecore.";
     }
 
     @Override

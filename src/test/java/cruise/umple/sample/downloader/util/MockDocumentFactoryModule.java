@@ -1,17 +1,18 @@
 package cruise.umple.sample.downloader.util;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Resources;
-import com.google.inject.AbstractModule;
-import cruise.umple.sample.downloader.DocumentFactory;
-import cruise.umple.sample.downloader.RealDocumentFactory;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Optional;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
+import com.google.inject.AbstractModule;
+
+import cruise.umple.sample.downloader.RealDocumentFactory;
 
 /**
  * Test module to load files locally instead of from web pages, allowing for consistency

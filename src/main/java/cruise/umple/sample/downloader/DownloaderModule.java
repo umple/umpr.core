@@ -1,12 +1,13 @@
 package cruise.umple.sample.downloader;
 
-import com.google.inject.AbstractModule;
-import cruise.umple.sample.downloader.repositories.RepositoryModule;
-
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.inject.AbstractModule;
+
+import cruise.umple.sample.downloader.repositories.RepositoryModule;
 
 /**
  * Created by kevin on 15-02-22.

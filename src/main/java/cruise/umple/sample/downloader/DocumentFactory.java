@@ -3,10 +3,10 @@
  */
 package cruise.umple.sample.downloader;
 
-import org.jsoup.nodes.Document;
-
 import java.io.File;
 import java.util.Optional;
+
+import org.jsoup.nodes.Document;
 
 /**
  * Functional interface for providing {@link Document} instances.

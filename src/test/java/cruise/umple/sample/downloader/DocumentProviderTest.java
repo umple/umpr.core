@@ -1,19 +1,20 @@
 package cruise.umple.sample.downloader;
 
-import com.google.inject.Inject;
-import static org.testng.Assert.*;
-
-import org.apache.commons.io.FileUtils;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
+
+import org.apache.commons.io.FileUtils;
+import org.jsoup.nodes.Document;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
+
+import com.google.inject.Inject;
 
 /**
  * Test {@link RealDocumentFactory}.
@@ -26,38 +27,49 @@ public class DocumentProviderTest {
 
     private static final String ZOO_URL = "http://www.emn.fr/z-info/atlanmod/index.php/Ecore";
     private static File ZOO_FILE;
-    private static String ZOO_FILE_CONTENT;
 
+    /**
+     * Creates a local copy of the {@link #ZOO_URL} and stores it into a temporary file to be deleted when the program
+     * exits.
+     * 
+     * @since Feb 24, 2015
+     */
     @BeforeClass
-    private static void beforeClass() {
+    public static void beforeClass() {
         try {
             ZOO_FILE = File.createTempFile("AtlanMod-Zoo", ".html");
             ZOO_FILE.deleteOnExit();
 
             FileUtils.copyURLToFile(new URL(ZOO_URL), ZOO_FILE);
-            ZOO_FILE_CONTENT = Jsoup.parse(ZOO_FILE, "utf-8").toString();
         } catch (IOException ioe) {
             // fail if we can't create the file
             throw new RuntimeException(ioe);
         }
     }
 
+    /**
+     * Tests {@link DocumentFactory#fromURL(String)}.
+     * 
+     * @since Feb 24, 2015
+     */
     @Test
     public void testFromURL() {
         assertFalse(docProv.fromURL("Non-exist").isPresent(), "Loaded proper Document from non-existant URL");
 
-        Optional<Document> odoc = docProv.fromURL(ZOO_URL);
-        assertTrue(odoc.isPresent(), "Failed to load proper Document from Zoo repository");
-        assertEquals(odoc.get().toString(), ZOO_FILE_CONTENT, "Document content invalid");
+        assertTrue(docProv.fromURL(ZOO_URL).isPresent(), "Failed to load proper Document from Zoo repository");
     }
 
+    /**
+     * Tests {@link DocumentFactory#fromFile(File)} and {@link DocumentFactory#fromFile(String)}.
+     * 
+     * @throws IOException
+     * @since Feb 24, 2015
+     */
     @Test
     public void testFromFile() throws IOException {
         assertFalse(docProv.fromFile("Non-exist").isPresent(), "Loaded proper Document from non-existant file");
 
         Optional<Document> odoc = docProv.fromFile(ZOO_FILE);
         assertTrue(odoc.isPresent(), "Failed to load proper Document from Zoo repository");
-        assertEquals(odoc.get().toString(), ZOO_FILE_CONTENT,
-                "Document was not properly loaded.");
     }
 }

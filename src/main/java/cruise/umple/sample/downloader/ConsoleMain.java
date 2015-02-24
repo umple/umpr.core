@@ -1,36 +1,36 @@
 package cruise.umple.sample.downloader;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import cruise.umple.compiler.EcoreImportHandler;
-import cruise.umple.compiler.UmpleImportModel;
-import cruise.umple.sample.downloader.util.Pair;
-import cruise.umple.sample.downloader.util.Triple;
-import org.apache.commons.io.FileUtils;
-
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.InputStream;
 import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Files;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
+import cruise.umple.compiler.EcoreImportHandler;
+import cruise.umple.compiler.UmpleImportModel;
+import cruise.umple.sample.downloader.util.Pair;
 
 public class ConsoleMain {
 
@@ -68,7 +68,6 @@ public class ConsoleMain {
     }
 
     private final Logger logger;
-    private final DocumentFactory documentFactory;
     private final Set<Repository> repositories;
 
     /**
@@ -78,28 +77,9 @@ public class ConsoleMain {
      * @param docFactory
      */
     @Inject
-    ConsoleMain(Logger logger, DocumentFactory docFactory, Set<Repository> repositories) {
+    ConsoleMain(Logger logger, Set<Repository> repositories) {
         this.logger = logger;
-        this.documentFactory = docFactory;
         this.repositories = ImmutableSet.copyOf(repositories);
-    }
-
-    private Triple<Path, Optional<String>, Optional<Exception>> loadECore(Path xmi) {
-        EcoreImportHandler handler = new EcoreImportHandler();
-        UmpleImportModel model;
-
-        logger.fine("Importing " + xmi);
-        try {
-            model = handler.readDataFromXML(xmi.toAbsolutePath().toString());
-            String output = model.generateUmple();
-            if (!"".equals(output)) {
-                return new Triple<>(xmi, Optional.of(output), Optional.empty());
-            } else {
-                return new Triple<>(xmi, Optional.empty(), Optional.of(new IllegalStateException("Failed to import " + xmi)));
-            }
-        } catch (IOException | ParserConfigurationException e) {
-            return new Triple<>(xmi, Optional.empty(), Optional.of(e));
-        }
     }
 
     public static void main(String[] args) throws IOException {
@@ -112,9 +92,86 @@ public class ConsoleMain {
 
         ConsoleMain main = in.getInstance(ConsoleMain.class);
         main.run(cfg);
+    }
+    
+    /**
+     * Stores data throughout the process
+     * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
+     *
+     */
+    static class Data {
+      private final Path outputFile;
+      private Optional<String> umpleContent = Optional.empty();
+      
+      private final URL input;
+      private Optional<String> inputContent = Optional.empty();
+      
+      private final Repository repository;
+      
+      // holds an exception if errors occur
+      private Optional<Exception> failure = Optional.empty();
+      
+      /**
+       * Create a new instance of Data, a simple struct
+       * @param outputFolder
+       * @param input
+       * @param repository
+       */
+      Data(Path outputFolder, URL input, Repository repository) {
+        final Path inputPath = Paths.get(input.getPath());
+        
+        this.outputFile = Paths.get(outputFolder.toFile().getAbsolutePath(),
+            repository.getName(), inputPath.getFileName().toString() + ".ump");
+        this.repository = repository;
+        this.input = input;
+      }
 
-        // actual page: http://www.emn.fr/z-info/atlanmod/index.php/Ecore
-//		Document doc = Jsoup.parse(new File("lib/AtlanMod_ecore.html"), "utf-8");
+      public Optional<String> getInputContent() {
+        return inputContent;
+      }
+
+      public void setInputContent(String content) {
+        this.inputContent = Optional.of(content);
+      }
+
+      public Path getOutputPath() {
+        return outputFile;
+      }
+
+      public URL getInputUrl() {
+        return input;
+      }
+
+      public Repository getRepository() {
+        return repository;
+      }
+      
+      public boolean isSuccessful() {
+        return !failure.isPresent();
+      }
+
+      public Optional<Exception> getFailure() {
+        return failure;
+      }
+
+      public void setFailure(final Exception failure) {
+        this.failure = Optional.of(failure);
+      }
+      
+      public Optional<String> getUmpleContent() {
+        return umpleContent;
+      }
+
+      public void setUmpleContent(String umpleContent) {
+        this.umpleContent = Optional.of(umpleContent);
+      }
+
+      
+    }
+    
+    public static class ImportedInfo {
+      
+      
     }
 
     public void run(final Config cfg) {
@@ -137,45 +194,63 @@ public class ConsoleMain {
         if (cfg.limit > -1) {
             urls = urls.limit(cfg.limit);
         }
-
+        
+        Queue<Data> allData = new ConcurrentLinkedQueue<Data>();
+        
         urls.parallel()
             .map(pair -> {
-                Path path = Paths.get(pair.second.getPath());
-                Path xmiPath = Paths.get(cfg.importFileFolder.getAbsolutePath(),
-                        pair.first.getName(),
-                        path.getFileName().toString());
-
-                logger.finer("Downloading " + pair.second + " -> " + xmiPath);
+                return new Data(cfg.outputFolder.toPath(), pair.second, pair.first); 
+            }).map(data -> {
+                logger.finer("Downloading " + data.getInputUrl());
                 try {
-                    FileUtils.copyURLToFile(pair.second, xmiPath.toFile());
+                    final String content = IOUtils.toString(data.getInputUrl());
+                    data.setInputContent(content);
                 } catch (IOException ioe) {
-                    throw new IllegalStateException(ioe);
+                    data.setFailure(ioe);
                 }
-
-                return xmiPath;
+                
+                return data;
             })
-            .map(this::loadECore)
-            .forEach(t -> {
-                Path xmi = t.first;
-                final Path outputPath = Paths.get(cfg.outputFolder.getAbsolutePath(),
-                        xmi.subpath(xmi.getNameCount() - 2, xmi.getNameCount()).toString());
+            .peek(allData::add)
+            .map(data -> {
+                data.getOutputPath().getParent().toFile().mkdir();
 
-                outputPath.getParent().toFile().mkdir();
+                data.getInputContent().ifPresent(content -> {
+                  EcoreImportHandler handler = new EcoreImportHandler();
+                  UmpleImportModel model;
 
-                t.second.ifPresent(umple -> {
-                    try (PrintWriter pw = new PrintWriter(new File(outputPath.toString() + ".ump"))) {
-                        pw.write(t.second.get());
+                  logger.fine("Importing for " + data.getOutputPath());
+                  try (InputStream in = IOUtils.toInputStream(content, Charsets.UTF_8)) {
+                    model = handler.readDataFromXML(in);
+                    if (handler.isSuccessful()) {
+                      data.setUmpleContent(model.generateUmple());
+                    } else {
+                      data.setFailure(handler.getParseException().get());
+                    }
+                  
+                  } catch (IOException ioe) {
+                    data.setFailure(ioe);
+                  }
+                });
+
+                return data;
+            })
+            .forEach(data -> {
+                data.getUmpleContent().ifPresent(umple -> {
+                    try {
+                        FileUtils.write(new File(data.getOutputPath().toString()), umple);
                     } catch (IOException ioe) {
                         throw new IllegalStateException(ioe);
                     }
                 });
 
-                t.third.ifPresent(e -> {
-                    System.err.printf("Failed to parse %s, reason: %s", xmi, e.getMessage());
+                data.getFailure().ifPresent(e -> {
+                    System.err.printf("Failed to parse %s:\n", data.getInputUrl());
+                    e.printStackTrace(System.err);
                 });
             });
 
-        System.out.println("Saved Ecore files to: " + cfg.outputFolder.getPath());
+        System.out.println("Saved Umple files to: " + cfg.outputFolder.getPath());
 
     }
 }

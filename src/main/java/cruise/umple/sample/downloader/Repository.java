@@ -1,9 +1,9 @@
 package cruise.umple.sample.downloader;
 
-import cruise.umple.sample.downloader.util.Pair;
-
 import java.net.URL;
 import java.util.List;
+
+import cruise.umple.sample.downloader.util.Pair;
 
 /**
  * Defines the behaviour of a collection of importable files.
@@ -11,11 +11,18 @@ import java.util.List;
 public interface Repository {
 
     /**
-     * Get the name of the Respository, there are no requirements except not null or empty.
+     * Get the name of the Repository, there are no requirements except not null or empty.
      *
-     * @return Human-friendly name
+     * @return Human-friendly name, non-null or empty. 
      */
     public String getName();
+    
+    /**
+     * Returns a human-readable description of the repository. 
+     * @return Non-null, nor empty String representation. 
+     */
+    public String getDescription();
+    
 
     /**
      * Get the type of files in the repository.
