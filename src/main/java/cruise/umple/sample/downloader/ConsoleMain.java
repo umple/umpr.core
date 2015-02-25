@@ -1,18 +1,20 @@
 package cruise.umple.sample.downloader;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
@@ -22,7 +24,9 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -99,7 +103,7 @@ public class ConsoleMain {
      * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
      *
      */
-    static class Data {
+    static class ImportRuntimeData {
       private final Path outputFile;
       private Optional<String> umpleContent = Optional.empty();
       
@@ -117,7 +121,7 @@ public class ConsoleMain {
        * @param input
        * @param repository
        */
-      Data(Path outputFolder, URL input, Repository repository) {
+      ImportRuntimeData(Path outputFolder, URL input, Repository repository) {
         final Path inputPath = Paths.get(input.getPath());
         
         this.outputFile = Paths.get(outputFolder.toFile().getAbsolutePath(),
@@ -174,7 +178,15 @@ public class ConsoleMain {
       
     }
 
-    public void run(final Config cfg) {
+    /**
+     * Run the main console function which produces two lists of {@link ImportRuntimeData} constructs, pre-filtered into successful
+     * and unsuccessful. 
+     * @param cfg Configuration data
+     * @return Two lists, first list is successful data, second is unsucessful. Both lists are non-null, possibly empty
+     *    and immutable. 
+     * @since Feb 25, 2015
+     */
+    public Pair<List<ImportRuntimeData>, List<ImportRuntimeData>> run(final Config cfg) {
 
         cfg.outputFolder.mkdirs();
         cfg.importFileFolder.mkdirs();
@@ -195,11 +207,9 @@ public class ConsoleMain {
             urls = urls.limit(cfg.limit);
         }
         
-        Queue<Data> allData = new ConcurrentLinkedQueue<Data>();
-        
-        urls.parallel()
+        List<ImportRuntimeData> allData = urls.parallel()
             .map(pair -> {
-                return new Data(cfg.outputFolder.toPath(), pair.second, pair.first); 
+                return new ImportRuntimeData(cfg.outputFolder.toPath(), pair.second, pair.first); 
             }).map(data -> {
                 logger.finer("Downloading " + data.getInputUrl());
                 try {
@@ -211,7 +221,6 @@ public class ConsoleMain {
                 
                 return data;
             })
-            .peek(allData::add)
             .map(data -> {
                 data.getOutputPath().getParent().toFile().mkdir();
 
@@ -235,7 +244,7 @@ public class ConsoleMain {
 
                 return data;
             })
-            .forEach(data -> {
+            .map(data -> {
                 data.getUmpleContent().ifPresent(umple -> {
                     try {
                         FileUtils.write(new File(data.getOutputPath().toString()), umple);
@@ -244,13 +253,35 @@ public class ConsoleMain {
                     }
                 });
 
+                // Log any failures
                 data.getFailure().ifPresent(e -> {
-                    System.err.printf("Failed to parse %s:\n", data.getInputUrl());
-                    e.printStackTrace(System.err);
+                  logger.fine(() -> {
+                    // simple lambda supplier of the string for the stack trace
+                    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                         PrintStream ps = new PrintStream(baos)) {
+                      // write the messages to the print stream, then convert it to string and log it
+                      ps.printf("Failed to parse %s:\n", data.getInputUrl());
+                      e.printStackTrace(ps);
+                      return baos.toString(Charsets.UTF_8.name());  
+                    } catch (IOException ioe) {
+                      // this should *never* happen, none of these operations are on the file system and the charset 
+                      // chosen should be universally supported.
+                      throw new IllegalStateException(ioe);
+                    }
+                  });
                 });
-            });
+                
+                return data;
+            }).collect(Collectors.toList());
 
-        System.out.println("Saved Umple files to: " + cfg.outputFolder.getPath());
+        ImmutableList.Builder<ImportRuntimeData> successful = ImmutableList.builder(), 
+            failure = ImmutableList.builder();
+       
+        allData.stream().filter(ImportRuntimeData::isSuccessful).forEach(successful::add);
+        allData.stream().filter(d -> !d.isSuccessful()).forEach(failure::add);
+        
+        logger.info("Saved Umple files to: " + cfg.outputFolder.getPath());
 
+        return new Pair<>(successful.build(), failure.build());
     }
 }
