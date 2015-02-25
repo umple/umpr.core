@@ -2,8 +2,11 @@ package cruise.umple.sample.downloader.repositories;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -16,7 +19,7 @@ import cruise.umple.sample.downloader.DocumentFactory;
 import cruise.umple.sample.downloader.FileType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.util.Networks;
-import cruise.umple.sample.downloader.util.Pair;
+import cruise.umple.sample.downloader.util.Triple;
 
 /**
  * Created by kevin on 15-02-23.
@@ -58,7 +61,7 @@ class AtlanZooRepository implements Repository {
     }
 
     @Override
-    public List<Pair<Repository, URL>> getImportFiles() {
+    public List<Triple<Repository, Path, Supplier<String>>> getImports() {
         Optional<Document> doc = documentFactory.fromURL(REPO_URL);
 
         if (!doc.isPresent()) {
@@ -73,11 +76,14 @@ class AtlanZooRepository implements Repository {
                 .flatMap(List::stream)
                 .map(e -> {
                     try {
-                        return new Pair<Repository, URL>(this, new URL(e.attr("href")));
+                        return new URL(e.attr("href"));
                     } catch (MalformedURLException mue) {
                         throw new IllegalArgumentException(mue);
                     }
-                }).collect(Collectors.toList());
+                })
+                .map(url -> Triple.<Repository, Path, Supplier<String>>newTriple(this, Paths.get(url.getPath()), 
+                    Networks.newURLDownloader(url)))
+                .collect(Collectors.toList());
     }
 
     @Override

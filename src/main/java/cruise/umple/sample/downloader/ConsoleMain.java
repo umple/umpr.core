@@ -5,14 +5,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,7 +25,6 @@ import com.beust.jcommander.Parameters;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -34,7 +32,9 @@ import com.google.inject.Injector;
 
 import cruise.umple.compiler.EcoreImportHandler;
 import cruise.umple.compiler.UmpleImportModel;
+import cruise.umple.sample.downloader.ConsoleMain.ImportRuntimeData;
 import cruise.umple.sample.downloader.util.Pair;
+import cruise.umple.sample.downloader.util.Triple;
 
 public class ConsoleMain {
 
@@ -107,7 +107,7 @@ public class ConsoleMain {
       private final Path outputFile;
       private Optional<String> umpleContent = Optional.empty();
       
-      private final URL input;
+      private final Supplier<String> inputFunction;
       private Optional<String> inputContent = Optional.empty();
       
       private final Repository repository;
@@ -121,13 +121,11 @@ public class ConsoleMain {
        * @param input
        * @param repository
        */
-      ImportRuntimeData(Path outputFolder, URL input, Repository repository) {
-        final Path inputPath = Paths.get(input.getPath());
-        
+      ImportRuntimeData(Path outputFolder, Path inputName, Supplier<String> inputFunc, Repository repository) {        
         this.outputFile = Paths.get(outputFolder.toFile().getAbsolutePath(),
-            repository.getName(), inputPath.getFileName().toString() + ".ump");
+            repository.getName(), inputName.getFileName().toString() + ".ump");
         this.repository = repository;
-        this.input = input;
+        this.inputFunction = inputFunc;
       }
 
       public Optional<String> getInputContent() {
@@ -142,8 +140,8 @@ public class ConsoleMain {
         return outputFile;
       }
 
-      public URL getInputUrl() {
-        return input;
+      public Supplier<String> getInputFunction() {
+        return inputFunction;
       }
 
       public Repository getRepository() {
@@ -198,9 +196,9 @@ public class ConsoleMain {
             repos = repos.filter(r -> names.contains(r.getName()));
         }
 
-        Stream<Pair<Repository, URL>> urls = repos.filter(Repository::isAccessible)
+        Stream<Triple<Repository, Path, Supplier<String>>> urls = repos.filter(Repository::isAccessible)
                 .peek(r -> this.logger.config("Loading Repository: " + r.getName()))
-                .map(Repository::getImportFiles)
+                .map(Repository::getImports)
                 .flatMap(List::stream);
 
         if (cfg.limit > -1) {
@@ -208,23 +206,22 @@ public class ConsoleMain {
         }
         
         List<ImportRuntimeData> allData = urls.parallel()
-            .map(pair -> {
-                return new ImportRuntimeData(cfg.outputFolder.toPath(), pair.second, pair.first); 
+            .map(tr -> {
+                return new ImportRuntimeData(cfg.outputFolder.toPath(), tr.second, tr.third, tr.first); 
             }).map(data -> {
-                logger.finer("Downloading " + data.getInputUrl());
-                try {
-                    final String content = IOUtils.toString(data.getInputUrl());
-                    data.setInputContent(content);
-                } catch (IOException ioe) {
-                    data.setFailure(ioe);
-                }
+              try {
+                data.setInputContent(data.getInputFunction().get());
+              } catch (RuntimeException re) {
+                // we do this because the input function could theoretically fail
+                data.setFailure(re);
+              }
                 
-                return data;
+              return data;
             })
             .map(data -> {
-                data.getOutputPath().getParent().toFile().mkdir();
-
                 data.getInputContent().ifPresent(content -> {
+                  data.getOutputPath().getParent().toFile().mkdir();
+
                   EcoreImportHandler handler = new EcoreImportHandler();
                   UmpleImportModel model;
 
@@ -260,7 +257,7 @@ public class ConsoleMain {
                     try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
                          PrintStream ps = new PrintStream(baos)) {
                       // write the messages to the print stream, then convert it to string and log it
-                      ps.printf("Failed to parse %s:\n", data.getInputUrl());
+                      ps.printf("Failed to parse %s:\n", data.getInputFunction());
                       e.printStackTrace(ps);
                       return baos.toString(Charsets.UTF_8.name());  
                     } catch (IOException ioe) {

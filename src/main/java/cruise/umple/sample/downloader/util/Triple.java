@@ -19,4 +19,16 @@ public class Triple<F, S, T> {
         this.second = second;
         this.third = third;
     }
+    
+    /**
+     * Factory method to simplify specifying a Triple using type deduction.
+     * @param first
+     * @param second
+     * @param third
+     * @return new {@link Triple} instance
+     * @since Feb 25, 2015
+     */
+    public static <F, S, T> Triple<F, S, T> newTriple(F first, S second, T third) {
+      return new Triple<>(first, second, third);
+    }
 }

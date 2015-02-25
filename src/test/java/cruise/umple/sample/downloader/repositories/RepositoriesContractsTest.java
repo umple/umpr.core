@@ -5,8 +5,10 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import org.testng.annotations.Guice;
@@ -18,11 +20,12 @@ import cruise.umple.sample.downloader.DownloaderModule;
 import cruise.umple.sample.downloader.FileType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.util.Pair;
+import cruise.umple.sample.downloader.util.Triple;
 
 /**
  * This Test will test all loaded repositories to make sure that when inheriting from the {@link Repository} interface, 
  * they match the contracts outlined. This test may be slow due to it fetching the result of 
- * {@link Repository#getImportFiles()} for every loaded {@link Repository}. 
+ * {@link Repository#getImports()} for every loaded {@link Repository}. 
  * 
  * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
  * 
@@ -75,7 +78,7 @@ public class RepositoriesContractsTest {
     
     /**
      * Check all returned {@link Repository}, {@link URL} {@link Pair} instances to adhere to 
-     * {@link Repository#getImportFiles()} specifications.
+     * {@link Repository#getImports()} specifications.
      * 
      * @since Feb 24, 2015
      */
@@ -85,13 +88,14 @@ public class RepositoriesContractsTest {
       for (Repository r : allRepositories) {
         logger.finest("Repository: " + r.getName());
         
-        List<Pair<Repository, URL>> urls = r.getImportFiles();
-        assertNotNull(urls, "urls response was null");
+        List<Triple<Repository, Path, Supplier<String>>> imports = r.getImports();
+        assertNotNull(imports, "urls response was null");
         
-        for (Pair<Repository, URL> p : urls) {
-          assertNotNull(p, "Pair was null");
-          assertEquals(p.first, r, "URLs from Repository, " + r.getName() + ", do not have proper Repository set");
-          assertNotNull(p.second, "URL was null");
+        for (Triple<Repository, Path, Supplier<String>> tr : imports) {
+          assertNotNull(tr, "Triple was null");
+          assertEquals(tr.first, r, "Import from Repository, " + r.getName() + ", do not have proper Repository set");
+          assertNotNull(tr.second, "Import path from Repository, " + r.getName() + ", was null.");
+          assertNotNull(tr.third, "Import Supplier<String> from Repository, " + r.getName() + ", was null.");
         }
       }
     }

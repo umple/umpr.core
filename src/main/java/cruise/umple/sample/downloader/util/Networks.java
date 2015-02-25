@@ -3,6 +3,9 @@ package cruise.umple.sample.downloader.util;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.function.Supplier;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  * Utility methods for networking
@@ -37,6 +40,23 @@ public abstract class Networks {
         } catch (IOException exception) {
             return false;
         }
+    }
+    
+    /**
+     * Creates a simple {@link Supplier} function that downloads a {@link URL} via {@link IOUtils#toString(URL)}.
+     * @param url The {@link URL} to download
+     * @return {@link Supplier} function for downloading a {@link URL}. 
+     * 
+     * @since Feb 25, 2015
+     */
+    public static Supplier<String> newURLDownloader(final URL url) {
+      return () -> {
+        try {
+          return IOUtils.toString(url);
+        } catch (IOException ioe) {
+          throw new IllegalStateException(ioe);
+        }
+      };
     }
 
 }
