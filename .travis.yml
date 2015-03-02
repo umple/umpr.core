@@ -4,22 +4,19 @@ jdk:
   - oraclejdk8
 
 before_install:
-  - export UMPLE_DIR=~/umple
-  - git clone --depth=2 git@github.com:umple/Umple.git $UMPLE_DIR
-  - pushd $UMPLE_DIR
-
-  # install dependencies
-  - chmod 755 -R ./travis # to deal with SVN possibly not holding permissions
-  - ./travis/deps.sh # run linux or osx depending on environment
-
+  - export UMPLE_DIR=~/umple/Umple
+  - git clone --depth=2 --branch=master https://github.com/umple/Umple.git $UMPLE_DIR
+  
+before_script:
   # build
-  - cd build/
-  - ant -Dmyenv=travis -f build.umple.xml build 
-  - popd
+  - cd $UMPLE_DIR/build/
+  - ant -Dmyenv=local -f build.umple.xml first-build
+  - ant -Dmyenv=local -f build.umple.xml umpleSelf compile packageMainJar # ignore tests, we don't care about them 
 
 script:
+  - cd $TRAVIS_BUILD_DIR
   - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar compile
-  - ant -f build.xml test
+  - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar test
 
 os:
   - linux
