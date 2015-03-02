@@ -2,11 +2,9 @@ package cruise.umple.sample.downloader.repositories;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -14,22 +12,27 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import cruise.umple.sample.downloader.DocumentFactory;
 import cruise.umple.sample.downloader.FileType;
 import cruise.umple.sample.downloader.Repository;
+import cruise.umple.sample.downloader.entities.ImportEntity;
+import cruise.umple.sample.downloader.entities.ImportEntityFactory;
 import cruise.umple.sample.downloader.util.Networks;
-import cruise.umple.sample.downloader.util.Triple;
 
 /**
- * Created by kevin on 15-02-23.
+ * {@link Repository} representation for the Zoo repository on 
+ * {@link http://www.emn.fr/z-info/atlanmod/index.php/Ecore AtlanMod}. 
  */
+@Singleton
 class AtlanZooRepository implements Repository {
 
     private final static String REPO_URL = "http://www.emn.fr/z-info/atlanmod/index.php/Ecore";
 
     private final Logger logger;
     private final DocumentFactory documentFactory;
+    private final ImportEntityFactory entityFactory;
 
     /**
      * Create new instances of AtlanZooRepository
@@ -38,9 +41,10 @@ class AtlanZooRepository implements Repository {
      * @param documentFactory
      */
     @Inject
-    AtlanZooRepository(Logger logger, DocumentFactory documentFactory) {
+    AtlanZooRepository(Logger logger, DocumentFactory documentFactory, ImportEntityFactory entityFactory) {
         this.logger = logger;
         this.documentFactory = documentFactory;
+        this.entityFactory = entityFactory;
     }
 
     @Override
@@ -61,7 +65,7 @@ class AtlanZooRepository implements Repository {
     }
 
     @Override
-    public List<Triple<Repository, Path, Supplier<String>>> getImports() {
+    public List<ImportEntity> getImports() {
         Optional<Document> doc = documentFactory.fromURL(REPO_URL);
 
         if (!doc.isPresent()) {
@@ -81,8 +85,7 @@ class AtlanZooRepository implements Repository {
                         throw new IllegalArgumentException(mue);
                     }
                 })
-                .map(url -> Triple.<Repository, Path, Supplier<String>>newTriple(this, Paths.get(url.getPath()), 
-                    Networks.newURLDownloader(url)))
+                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), url))
                 .collect(Collectors.toList());
     }
 

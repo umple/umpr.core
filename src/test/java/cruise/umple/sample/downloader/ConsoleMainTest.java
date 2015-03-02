@@ -27,7 +27,7 @@ import cruise.umple.sample.downloader.util.Pair;
 @Guice(modules={DownloaderModule.class, MockDocumentFactoryModule.class})
 public class ConsoleMainTest {
 
-    @Inject
+    @Inject 
     private Set<Repository> repositorySet;
 
     @Inject

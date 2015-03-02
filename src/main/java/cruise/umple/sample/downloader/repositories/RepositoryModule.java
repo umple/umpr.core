@@ -1,6 +1,7 @@
 package cruise.umple.sample.downloader.repositories;
 
-import com.google.inject.AbstractModule;
+import com.google.inject.Binder;
+import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 
 import cruise.umple.sample.downloader.Repository;
@@ -8,12 +9,12 @@ import cruise.umple.sample.downloader.Repository;
 /**
  * Module that binds all Repository instances in for the main application to load at runtime.
  */
-public class RepositoryModule extends AbstractModule {
-
+public class RepositoryModule implements Module {
+  
     @Override
-    protected void configure() {
-        Multibinder<Repository> binder = Multibinder.newSetBinder(binder(), Repository.class);
+    public void configure(Binder binder) {
+      Multibinder<Repository> mbinder = Multibinder.newSetBinder(binder, Repository.class);
 
-        binder.addBinding().to(AtlanZooRepository.class);
+      mbinder.addBinding().to(AtlanZooRepository.class);
     }
 }

@@ -1,11 +1,16 @@
 package cruise.umple.sample.downloader.util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
+
+import com.google.common.base.Throwables;
+import com.sun.istack.internal.logging.Logger;
 
 /**
  * Utility methods for networking
@@ -43,6 +48,69 @@ public abstract class Networks {
     }
     
     /**
+     * Supplies the content of a {@link URL} and uses HTTP caching to try to avoid redownloading the file as they tend
+     * to be large. 
+     * 
+     * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
+     * @since Mar 2, 2015
+     */
+    private static class URLSupplier implements Supplier<String> {
+      
+      private final Logger log = Logger.getLogger(URLSupplier.class);
+      
+      private final URL url;
+      
+      private long timestamp = -1;
+      private Optional<String> content = Optional.empty();
+      
+      /**
+       * Creates a new instance of URLSupplier.
+       * @param url
+       * @since Mar 2, 2015
+       */
+      URLSupplier(URL url) {
+        this.url = url;
+      }
+      
+      @Override
+      public String get() {
+        try {
+            HttpURLConnection http = (HttpURLConnection)url.openConnection();
+            http.setAllowUserInteraction(true);
+            http.setRequestMethod("GET");
+            
+            // if we already have a content instance, we can set the If-Modified-Since header, this will stop a full 
+            // download if not necessary since the response code will not be HTTP_OK
+            content.ifPresent(c -> {
+              http.setIfModifiedSince(timestamp);
+            });
+            
+            http.connect();
+            
+            if (http.getResponseCode() == HttpURLConnection.HTTP_OK) {
+              // we only set the content if the HTTP response code was OK. 
+              
+              try (InputStream in = http.getInputStream()) {
+                content = Optional.of(IOUtils.toString(in));
+                
+                // this will not be set if the toString call fails
+                timestamp = http.getLastModified();
+              }
+            }
+            
+            return content.get();
+        }
+        catch (IOException ioe) {
+          log.warning("URLSupplier#get() failed with exception");
+          log.warning(Throwables.getStackTraceAsString(ioe));
+          
+          throw new IllegalStateException(ioe);
+        }
+      }
+      
+    }
+    
+    /**
      * Creates a simple {@link Supplier} function that downloads a {@link URL} via {@link IOUtils#toString(URL)}.
      * @param url The {@link URL} to download
      * @return {@link Supplier} function for downloading a {@link URL}. 
@@ -50,13 +118,7 @@ public abstract class Networks {
      * @since Feb 25, 2015
      */
     public static Supplier<String> newURLDownloader(final URL url) {
-      return () -> {
-        try {
-          return IOUtils.toString(url);
-        } catch (IOException ioe) {
-          throw new IllegalStateException(ioe);
-        }
-      };
+      return new URLSupplier(url);
     }
 
 }

@@ -1,12 +1,8 @@
 package cruise.umple.sample.downloader;
 
-import java.net.URL;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.function.Supplier;
 
-import cruise.umple.sample.downloader.util.Pair;
-import cruise.umple.sample.downloader.util.Triple;
+import cruise.umple.sample.downloader.entities.ImportEntity;
 
 /**
  * Defines the behaviour of a collection of importable files.
@@ -37,9 +33,9 @@ public interface Repository {
     /**
      * Get a list of URL instances where the import files may be stored.
      *
-     * @return Non-{@code null}, possibly empty list of Import Files
+     * @return Non-{@code null}, possibly empty list of {@link ImportEntity} instances
      */
-    public List<Triple<Repository, Path, Supplier<String>>> getImports();
+    public List<ImportEntity> getImports();
 
     /**
      * Checks if the repository is accessible.

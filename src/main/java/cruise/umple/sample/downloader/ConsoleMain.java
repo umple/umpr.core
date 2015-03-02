@@ -16,6 +16,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -32,9 +34,8 @@ import com.google.inject.Injector;
 
 import cruise.umple.compiler.EcoreImportHandler;
 import cruise.umple.compiler.UmpleImportModel;
-import cruise.umple.sample.downloader.ConsoleMain.ImportRuntimeData;
+import cruise.umple.sample.downloader.entities.ImportEntity;
 import cruise.umple.sample.downloader.util.Pair;
-import cruise.umple.sample.downloader.util.Triple;
 
 public class ConsoleMain {
 
@@ -196,7 +197,7 @@ public class ConsoleMain {
             repos = repos.filter(r -> names.contains(r.getName()));
         }
 
-        Stream<Triple<Repository, Path, Supplier<String>>> urls = repos.filter(Repository::isAccessible)
+        Stream<ImportEntity> urls = repos.filter(Repository::isAccessible)
                 .peek(r -> this.logger.config("Loading Repository: " + r.getName()))
                 .map(Repository::getImports)
                 .flatMap(List::stream);
@@ -206,9 +207,8 @@ public class ConsoleMain {
         }
         
         List<ImportRuntimeData> allData = urls.parallel()
-            .map(tr -> {
-                return new ImportRuntimeData(cfg.outputFolder.toPath(), tr.second, tr.third, tr.first); 
-            }).map(data -> {
+            .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr, tr.getRepository()))
+            .map(data -> {
               try {
                 data.setInputContent(data.getInputFunction().get());
               } catch (RuntimeException re) {
@@ -234,8 +234,8 @@ public class ConsoleMain {
                       data.setFailure(handler.getParseException().get());
                     }
                   
-                  } catch (IOException ioe) {
-                    data.setFailure(ioe);
+                  } catch (ParserConfigurationException | IOException e) {
+                    data.setFailure(e);
                   }
                 });
 

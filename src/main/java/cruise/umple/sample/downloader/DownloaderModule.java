@@ -7,10 +7,11 @@ import java.util.logging.Logger;
 
 import com.google.inject.AbstractModule;
 
+import cruise.umple.sample.downloader.entities.EntityModule;
 import cruise.umple.sample.downloader.repositories.RepositoryModule;
 
 /**
- * Created by kevin on 15-02-22.
+ * Guice module for the Downloader application
  */
 public class DownloaderModule extends AbstractModule {
 
@@ -21,10 +22,11 @@ public class DownloaderModule extends AbstractModule {
         rootLogger.addHandler(ch);
         rootLogger.setLevel(Level.ALL);
 
+        install(new EntityModule());
         install(new RepositoryModule());
+       
 
         bind(DocumentFactory.class).to(RealDocumentFactory.class);
-
     }
 
 }
