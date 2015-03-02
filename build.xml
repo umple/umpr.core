@@ -1,72 +1,128 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="umple.sample.downloader" default="all">
-  
-  
-  <property file="build.properties"/>
-  <!-- Uncomment the following property if no tests compilation is needed -->
-  <!-- 
+<project name="umple.sample.downloader" xmlns:ivy="antlib:org.apache.ivy.ant" default="all">
+
+
+	<property file="build.properties"/>
+	<!-- Uncomment the following property if no tests compilation is needed -->
+	<!-- 
   <property name="skip.tests" value="true"/>
    -->
-  
-  <property name="version" value="0.0.0" />
 
-  <property name="output.dir" value="./bin" />
-  <property name="test.output.dir" value="./test-bin/"/>
+	<property name="version" value="0.0.0" />
 
-  <property name="src.dir" value="./src/main/java" />
-  <property name="test.src.dir" value="./src/test/java"/>
-  
-  <!-- Modules -->
-  
-  
-  <!-- Module umple.sample.downloader -->
-  
-  <dirname property="module.basedir" file="${ant.file}"/>
+	<property name="build.dir" value="./bin" />
+	<property name="build.dir.compile" value="${build.dir}/classes" />
+	<property name="build.dir.resources" value="${build.dir.compile}" />
 
-  <target name="resolve" description="--> retrieve dependencies with ivy">
-    <ivy:resolve />
-    <ivy:retrieve sync="true" type="jar" />
-    <ivy:cachepath pathid="build.path"/>
-  </target>
+	<property name="test.build.dir" value="./bin"/>
+	<property name="test.build.dir.report" value="${test.build.dir}/report" />
+	<property name="test.build.dir.compile" value="${test.build.dir}/classes" />
+  <property name="test.build.dir.resources" value="${test.build.dir.compile}" />
 
-  <target name="compile" depends="init" description="Compile core code">
-    <mkdir dir="${output.dir}/classes" />
-    <javac srcdir="${src.dir}" destdir="${output.dir}/classes" >
-      <classpath refid="build.path" />
-      <exclude name="**/.git" />
-      <exclude name="**/.svn" />
-    </javac>
-  </target>
+	<property name="src.dir" value="./src/main/java" />
+	<property name="test.src.dir" value="./src/test/java"/>
 
-  <target name="test.compile" depends="init, compile" description="Compile test code">
-    <mkdir dir="${test.output.dir}/classes" />
-    <javac srcdir="${test.src.dir}" destdir="${test.output.dir}" >
-      <classpath refid="build.path" />
-      <exclude name="**/.git" />
-      <exclude name="**/.svn" />
-    </javac>
-  </target>
+	<!-- Modules -->
+	
+	<property name="ivy.install.version" value="2.4.0" />
+	<property name="ivy.jar.dir" value="${basedir}/ivy" />
+	<property name="ivy.jar.file" value="${ivy.jar.dir}/ivy-${ivy.install.version}.jar" />
+	<property name="ivy.lib.dir" value="${basedir}/lib" />
 
-  <target name="package" depends="compile" description="Compile and create jars">
-    <jar destfile="${output.dir}/jars/${ant.project.name}-${version}.jar"
-         basedir="${output.dir}/classes" />
-  </target>
-  
-  <target name="tests" depends="" description="compile module umple.sample.downloader; test classes" unless="skip.tests">
 
-  </target>
+	<!-- Module umple.sample.downloader -->
 
-  <target name="clean" description="cleanup module">
-    <delete dir="${output.dir}"/>
-    <delete dir="${test.output.dir}"/>
-  </target>
+	<dirname property="module.basedir" file="${ant.file}"/>
 
-  <target name="init" description="Build initialization" depends="resolve">
-    <!-- Perform any build initialization in this target -->
-  </target>
-  
+	<target name="install-ivy" depends="download-ivy" description="Install ivy">
+		<path id="ivy.lib.path">
+			<fileset dir="${ivy.jar.dir}" includes="*.jar" />
+		</path>
+		<taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path" />
+	</target>
+	
+	<target name="download-ivy" unless="skip.download">
+		<mkdir dir="${ivy.jar.dir}" />
+		<get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" 
+			dest="${ivy.jar.file}" usetimestamp="true" />
+	</target>
 
-  <target name="build.modules" depends="init, clean, compile" description="build all modules"/>
-  
-  <target name="all" depends="build.modules" description="build all"/>
+	<target name="resolve" depends="install-ivy" description="--> retrieve dependencies with ivy">
+		<ivy:resolve />
+		<ivy:retrieve sync="true" />
+		<ivy:cachepath pathid="build.path" conf="build"/>
+		<ivy:cachepath pathid="test.path" conf="test"/>
+
+		<path id="ivylib.path.id">
+			<fileset dir="${ivy.lib.dir}" />
+		</path>
+	</target>
+
+	<target name="compile" depends="init" description="Compile core code">
+		<javac srcdir="${src.dir}" destdir="${build.dir.compile}" includeantruntime="true" >
+			<classpath refid="build.path" />
+			<classpath path="${umple.core.jar}" />
+			<exclude name="**/.git" />
+		</javac>
+		<copy todir="${build.dir.resources}}">
+		    <fileset dir="src"
+		       includes="**/*.xml,**/*.properties,**/*.html" />
+		</copy>
+	</target>
+
+	<target name="test.compile" depends="init, compile" description="Compile test code">
+		<javac srcdir="${test.src.dir}" destdir="${test.build.dir.compile}" includeantruntime="true" >
+			<classpath refid="test.path" />
+			<classpath path="${umple.core.jar}" />
+			<classpath path="${build.dir.compile}" />
+			<exclude name="**/.git" />
+			<exclude name="**/.svn" />
+		</javac>
+		<copy todir="${test.build.dir.resources}}">
+		        <fileset dir="src"
+		           includes="**/*.xml,**/*.properties,**/*.html" />
+		    </copy>
+	</target>
+
+	<target name="test" depends="test.compile" description="Run TestNG test cases">
+		<taskdef name="testng" classname="org.testng.TestNGAntTask">
+			<classpath>
+				<path refid="ivylib.path.id" />
+			</classpath>
+		</taskdef>
+
+		<testng workingDir="${test.build.dir.report}" outputdir="${test.build.dir.report}">
+			<classpath>
+				<pathelement location="${build.dir.compile}" />
+				<pathelement location="${test.build.dir.compile}" />
+				<path refid="ivylib.path.id" />
+			</classpath>
+			<classfileset dir="${test.build.dir.compile}" includes="**/*.class" />
+		</testng>
+
+	</target>
+
+	<target name="package" depends="compile" description="Compile and create jars">
+		<jar destfile="${build.dir}/jars/${ant.project.name}-${version}.jar"
+         basedir="${build.dir}/classes" />
+	</target>
+
+	<target name="clean" description="cleanup module">
+		<delete dir="${build.dir}"/>
+		<delete dir="${test.build.dir}"/>
+	</target>
+	
+	<target name="real-clean" depends="clean" description="Clean-up everything, including dependencies">
+	  <delete dir="${ivy.jar.dir}" />
+		<delete dir="${ivy.lib.dir}" />
+	</target>
+
+	<target name="init" description="Build initialization" depends="install-ivy, resolve">
+		<mkdir dir="${build.dir.compile}" />
+		<mkdir dir="${test.build.dir.compile}" />
+	</target>
+	
+	<target name="build.modules" depends="init, clean, compile" description="build all modules"/>
+
+	<target name="all" depends="build.modules" description="build all"/>
 </project>

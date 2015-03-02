@@ -1,0 +1,25 @@
+language: java
+
+jdk:
+  - oraclejdk8
+
+before_install:
+  - export UMPLE_DIR=~/umple
+  - git clone --depth=2 git@github.com:umple/Umple.git $UMPLE_DIR
+  - pushd $UMPLE_DIR
+
+  # install dependencies
+  - chmod 755 -R ./travis # to deal with SVN possibly not holding permissions
+  - ./travis/deps.sh # run linux or osx depending on environment
+
+  # build
+  - cd build/
+  - ant -Dmyenv=travis -f build.umple.xml build 
+  - popd
+
+script:
+  - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar compile
+  - ant -f build.xml test
+
+os:
+  - linux

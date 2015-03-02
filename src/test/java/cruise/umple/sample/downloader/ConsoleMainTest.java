@@ -71,7 +71,7 @@ public class ConsoleMainTest {
      */
     @Test
     public void limitConfig() {
-        cfg.limit = 5;
+        cfg.limit = 10;
 
         Pair<List<ImportRuntimeData>, List<ImportRuntimeData>> result = main.run(cfg);
 
@@ -87,11 +87,11 @@ public class ConsoleMainTest {
      */
     @Test
     public void testRepositories() {
-        cfg.limit = -1; // get all of them
+        cfg.limit = 5; // get all of them
         main.run(cfg);
 
         Assert.assertEquals(getOutputFiles().count(),
-                0,
+                cfg.limit.longValue(),
                 "Failed to import properly.");
     }
 

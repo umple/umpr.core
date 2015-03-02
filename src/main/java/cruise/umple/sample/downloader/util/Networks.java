@@ -6,11 +6,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Throwables;
-import com.sun.istack.internal.logging.Logger;
 
 /**
  * Utility methods for networking
@@ -56,7 +56,7 @@ public abstract class Networks {
      */
     private static class URLSupplier implements Supplier<String> {
       
-      private final Logger log = Logger.getLogger(URLSupplier.class);
+      private final Logger log = Logger.getLogger(URLSupplier.class.getName());
       
       private final URL url;
       
