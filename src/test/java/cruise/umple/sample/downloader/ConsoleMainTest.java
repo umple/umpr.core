@@ -17,7 +17,6 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-import cruise.umple.sample.downloader.ConsoleMain.ImportRuntimeData;
 import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
 import cruise.umple.sample.downloader.util.Pair;
 

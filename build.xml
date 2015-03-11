@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="umple.sample.downloader" xmlns:ivy="antlib:org.apache.ivy.ant" default="all">
 
+	<taskdef name="umplec" classname="cruise.umple.util.UmplecAntTask" classpath="${umple.core.jar}" />
 
 	<property file="build.properties"/>
 	<!-- Uncomment the following property if no tests compilation is needed -->
@@ -19,8 +20,12 @@
 	<property name="test.build.dir.compile" value="${test.build.dir}/classes" />
   <property name="test.build.dir.resources" value="${test.build.dir.compile}" />
 
-	<property name="src.dir" value="./src/main/java" />
-	<property name="test.src.dir" value="./src/test/java"/>
+	<property name="src.dir" value="./src" />
+  <property name="src.dir.java" value="${src.dir}/main/java" />
+	<property name="src.dir.umple" value="${src.dir}/main/ump" />
+  <property name="src.dir.gen" value="${src.dir}/gen/" />
+  <property name="src.dir.gen.umple" value="${src.dir.gen}/umple" />
+	<property name="test.src.dir.java" value="./src/test/java"/>
 
 	<!-- Modules -->
 	
@@ -57,9 +62,19 @@
 			<fileset dir="${ivy.lib.dir}" />
 		</path>
 	</target>
+	
+	<target name="umpleGen" depends="init" description="Run umple against models shared between web interface">
+	 <umplec src="${src.dir.umple}/Master.ump" dest="${src.dir.gen.umple}" generate="Java" />
+	</target>
 
-	<target name="compile" depends="init" description="Compile core code">
-		<javac srcdir="${src.dir}" destdir="${build.dir.compile}" includeantruntime="true" >
+	<target name="compile" depends="init,umpleGen" description="Compile core code">
+		<javac srcdir="${src.dir.gen.umple}" destdir="${build.dir.compile}" includeantruntime="true" >
+      <classpath refid="build.path" />
+      <classpath path="${umple.core.jar}" />
+      <exclude name="**/.git" />
+    </javac>
+		
+		<javac srcdir="${src.dir.java}" destdir="${build.dir.compile}" includeantruntime="true" >
 			<classpath refid="build.path" />
 			<classpath path="${umple.core.jar}" />
 			<exclude name="**/.git" />
@@ -110,6 +125,9 @@
 	<target name="clean" description="cleanup module">
 		<delete dir="${build.dir}"/>
 		<delete dir="${test.build.dir}"/>
+		<delete includeemptydirs="true">
+	    <fileset dir="${src.dir.gen.umple}" excludes="**/dontdelete.txt" defaultexcludes="false"/>
+	  </delete>
 	</target>
 	
 	<target name="real-clean" depends="clean" description="Clean-up everything, including dependencies">
@@ -118,11 +136,14 @@
 	</target>
 
 	<target name="init" description="Build initialization" depends="install-ivy, resolve">
+		<mkdir dir="${build.dir}" />
 		<mkdir dir="${build.dir.compile}" />
+		
+		<mkdir dir="${test.build.dir}" />
 		<mkdir dir="${test.build.dir.compile}" />
 	</target>
 	
-	<target name="build.modules" depends="init, clean, compile" description="build all modules"/>
+	<target name="build.modules" depends="clean, init, compile" description="build all modules"/>
 
 	<target name="all" depends="build.modules" description="build all"/>
 </project>

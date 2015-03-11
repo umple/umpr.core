@@ -5,13 +5,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -99,79 +95,6 @@ public class ConsoleMain {
         main.run(cfg);
     }
     
-    /**
-     * Stores data throughout the process
-     * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
-     *
-     */
-    static class ImportRuntimeData {
-      private final Path outputFile;
-      private Optional<String> umpleContent = Optional.empty();
-      
-      private final Supplier<String> inputFunction;
-      private Optional<String> inputContent = Optional.empty();
-      
-      private final Repository repository;
-      
-      // holds an exception if errors occur
-      private Optional<Exception> failure = Optional.empty();
-      
-      /**
-       * Create a new instance of Data, a simple struct
-       * @param outputFolder
-       * @param input
-       * @param repository
-       */
-      ImportRuntimeData(Path outputFolder, Path inputName, Supplier<String> inputFunc, Repository repository) {        
-        this.outputFile = Paths.get(outputFolder.toFile().getAbsolutePath(),
-            repository.getName(), inputName.getFileName().toString() + ".ump");
-        this.repository = repository;
-        this.inputFunction = inputFunc;
-      }
-
-      public Optional<String> getInputContent() {
-        return inputContent;
-      }
-
-      public void setInputContent(String content) {
-        this.inputContent = Optional.of(content);
-      }
-
-      public Path getOutputPath() {
-        return outputFile;
-      }
-
-      public Supplier<String> getInputFunction() {
-        return inputFunction;
-      }
-
-      public Repository getRepository() {
-        return repository;
-      }
-      
-      public boolean isSuccessful() {
-        return !failure.isPresent();
-      }
-
-      public Optional<Exception> getFailure() {
-        return failure;
-      }
-
-      public void setFailure(final Exception failure) {
-        this.failure = Optional.of(failure);
-      }
-      
-      public Optional<String> getUmpleContent() {
-        return umpleContent;
-      }
-
-      public void setUmpleContent(String umpleContent) {
-        this.umpleContent = Optional.of(umpleContent);
-      }
-
-      
-    }
-    
     public static class ImportedInfo {
       
       
@@ -181,7 +104,7 @@ public class ConsoleMain {
      * Run the main console function which produces two lists of {@link ImportRuntimeData} constructs, pre-filtered into successful
      * and unsuccessful. 
      * @param cfg Configuration data
-     * @return Two lists, first list is successful data, second is unsucessful. Both lists are non-null, possibly empty
+     * @return Two lists, first list is successful data, second is unsuccessful. Both lists are non-null, possibly empty
      *    and immutable. 
      * @since Feb 25, 2015
      */
