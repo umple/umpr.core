@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import com.google.inject.AbstractModule;
 
+import cruise.umple.sample.downloader.consistent.ConsistentsModule;
 import cruise.umple.sample.downloader.entities.EntityModule;
 import cruise.umple.sample.downloader.repositories.RepositoryModule;
 
@@ -15,18 +16,18 @@ import cruise.umple.sample.downloader.repositories.RepositoryModule;
  */
 public class DownloaderModule extends AbstractModule {
 
-    @Override
-    public void configure() {
-        Handler ch = new ConsoleHandler();
-        Logger rootLogger = Logger.getLogger("");
-        rootLogger.addHandler(ch);
-        rootLogger.setLevel(Level.ALL);
+  @Override
+  public void configure() {
+    Handler ch = new ConsoleHandler();
+    Logger rootLogger = Logger.getLogger("");
+    rootLogger.addHandler(ch);
+    rootLogger.setLevel(Level.ALL);
 
-        install(new EntityModule());
-        install(new RepositoryModule());
-       
+    install(new EntityModule());
+    install(new RepositoryModule());
+    install(new ConsistentsModule());
 
-        bind(DocumentFactory.class).to(RealDocumentFactory.class);
-    }
+    bind(DocumentFactory.class).to(RealDocumentFactory.class);
+  }
 
 }

@@ -18,6 +18,7 @@ import cruise.umple.sample.downloader.DownloaderModule;
 import cruise.umple.sample.downloader.FileType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.entities.ImportEntity;
+import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
 import cruise.umple.sample.downloader.util.Pair;
 
 /**
@@ -30,7 +31,7 @@ import cruise.umple.sample.downloader.util.Pair;
  * @since 24 Feb 2015
  *
  */
-@Guice(modules={DownloaderModule.class})
+@Guice(modules={MockDocumentFactoryModule.class})
 public class RepositoriesContractsTest {
     
     @Inject

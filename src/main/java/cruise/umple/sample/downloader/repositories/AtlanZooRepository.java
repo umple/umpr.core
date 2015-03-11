@@ -85,7 +85,7 @@ class AtlanZooRepository implements Repository {
                         throw new IllegalArgumentException(mue);
                     }
                 })
-                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), url))
+                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), getFileType(), url))
                 .collect(Collectors.toList());
     }
 

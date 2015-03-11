@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.name.Named;
 
+import cruise.umple.sample.downloader.FileType;
 import cruise.umple.sample.downloader.Repository;
 
 /**
@@ -26,6 +27,7 @@ public interface ImportEntityFactory {
    * @param repository The repository this entity is linked to
    * @param path Relative path to store the entity after import
    * @param content Content to import
+   * @param fileType File Type
    * 
    * @return Non-{@code null} instance
    * 
@@ -33,7 +35,8 @@ public interface ImportEntityFactory {
    * @since Mar 2, 2015
    */
   @Named("String")
-  public ImportEntity createStringEntity(Repository repository, Path path, String content);
+  public ImportEntity createStringEntity(Repository repository, Path path, 
+                                         FileType fileType, String content);
   
   /**
    * Creates an {@link ImportEntity} that returns the result of a {@link Supplier} every time. 
@@ -41,6 +44,7 @@ public interface ImportEntityFactory {
    * @param repository The repository this entity is linked to
    * @param path Relative path to store the entity after import
    * @param content Content to import
+   * @param fileType File Type
    * 
    * @return Non-{@code null} instance
    * 
@@ -48,7 +52,7 @@ public interface ImportEntityFactory {
    * @since Mar 2, 2015
    */
   @Named("String")
-  public ImportEntity createStringEntity(Repository repository, Path path, Supplier<String> content);
+  public ImportEntity createStringEntity(Repository repository, Path path, FileType fileType, Supplier<String> content);
   
   /**
    * Creates an {@link ImportEntity} that returns the result of downloading the {@link URL} instance.
@@ -56,11 +60,12 @@ public interface ImportEntityFactory {
    * @param repository The repository this entity is linked to
    * @param path Relative path to store the entity after import
    * @param url Resource to download
+   * @param fileType File Type 
    * 
    * @return New non-{@code null} instance
    * 
    * @since Mar 2, 2015
    */
   @Named("URL")
-  public ImportEntity createUrlEntity(Repository repository, Path path, URL url);
+  public ImportEntity createUrlEntity(Repository repository, Path path, FileType fileType, URL url);
 }

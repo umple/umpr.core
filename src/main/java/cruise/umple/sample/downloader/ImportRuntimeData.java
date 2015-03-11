@@ -1,5 +1,7 @@
 package cruise.umple.sample.downloader;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -12,6 +14,7 @@ import java.util.function.Supplier;
  */
 class ImportRuntimeData {
   private final Path outputFile;
+  private final FileType fileType;
   private Optional<String> umpleContent = Optional.empty();
   
   private final Supplier<String> inputFunction;
@@ -28,11 +31,13 @@ class ImportRuntimeData {
    * @param input
    * @param repository
    */
-  ImportRuntimeData(Path outputFolder, Path inputName, Supplier<String> inputFunc, Repository repository) {        
-    this.outputFile = Paths.get(outputFolder.toFile().getAbsolutePath(),
+  ImportRuntimeData(Path outputFolder, Path inputName, final FileType fileType, Supplier<String> inputFunc, Repository repository) {        
+    checkNotNull(inputName);
+    this.outputFile = Paths.get(outputFolder.toAbsolutePath().toString(),
         repository.getName(), inputName.getFileName().toString() + ".ump");
-    this.repository = repository;
-    this.inputFunction = inputFunc;
+    this.repository = checkNotNull(repository);
+    this.inputFunction = checkNotNull(inputFunc);
+    this.fileType = fileType;
   }
 
   public Optional<String> getInputContent() {
@@ -73,6 +78,14 @@ class ImportRuntimeData {
 
   public void setUmpleContent(String umpleContent) {
     this.umpleContent = Optional.of(umpleContent);
+  }
+  
+  /**
+   * Get the associate file type. 
+   * @return FileType string
+   */
+  public FileType getFileType() {
+    return fileType;
   }
 
   

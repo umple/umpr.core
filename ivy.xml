@@ -13,7 +13,7 @@
         <dependency org="com.google.inject.extensions" name="guice-assistedinject" rev="4.0-beta5" conf="build->default" />
         <dependency org="com.google.inject.extensions" name="guice-multibindings" rev="4.0-beta5" conf="build->default" />
         <dependency org="com.beust" name="jcommander" rev="1.47" conf="build->default"/>
-        <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.5.1" conf="build->default"/>
+        <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.5.1" conf="build->default" />
         
         <!-- Testing -->
         <dependency org="org.testng" name="testng" rev="6.8.21" conf="test->default"/>

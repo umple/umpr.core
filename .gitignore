@@ -7,6 +7,9 @@ src/gen/
 
 *.class
 
+.externalToolBuilders/
+*.swp
+test-report/
 
 # idea
 .idea/

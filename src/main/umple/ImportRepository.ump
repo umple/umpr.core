@@ -1,4 +1,4 @@
-namespace cruise.umple.sample.downloader;
+namespace cruise.umple.sample.downloader.consistent;
 
 class ImportFile {
   String path;

@@ -16,10 +16,12 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 
+import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
+
 /**
  * Test {@link RealDocumentFactory}.
  */
-@Guice(modules = DownloaderModule.class)
+@Guice(modules = MockDocumentFactoryModule.class)
 public class DocumentProviderTest {
 
     @Inject

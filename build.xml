@@ -11,23 +11,27 @@
 
 	<property name="version" value="0.0.0" />
 
-	<property name="build.dir" value="./bin" />
-	<property name="build.dir.compile" value="${build.dir}/classes" />
+	<property name="build.dir" value="./bin/main" />
+	<property name="build.dir.compile" value="${build.dir}/" />
 	<property name="build.dir.resources" value="${build.dir.compile}" />
 
-	<property name="test.build.dir" value="./bin"/>
-	<property name="test.build.dir.report" value="${test.build.dir}/report" />
-	<property name="test.build.dir.compile" value="${test.build.dir}/classes" />
+	<property name="test.build.dir" value="./bin/test"/>
+	<property name="test.build.dir.report" value="./test-report" />
+	<property name="test.build.dir.compile" value="${test.build.dir}" />
   <property name="test.build.dir.resources" value="${test.build.dir.compile}" />
 
+	<!-- src directories --> 
 	<property name="src.dir" value="./src" />
   <property name="src.dir.java" value="${src.dir}/main/java" />
-	<property name="src.dir.umple" value="${src.dir}/main/ump" />
+	<property name="src.dir.resources" value="${src.dir}/main/resources" />
+	<property name="src.dir.umple" value="${src.dir}/main/umple" />
   <property name="src.dir.gen" value="${src.dir}/gen/" />
   <property name="src.dir.gen.umple" value="${src.dir.gen}/umple" />
-	<property name="test.src.dir.java" value="./src/test/java"/>
+	<property name="test.src.dir" value="${src.dir}/test" />
+  <property name="test.src.dir.java" value="${test.src.dir}/java"/>
+  <property name="test.src.dir.resources" value="${test.src.dir}/resources"/>
 
-	<!-- Modules -->
+	<!-- Ivy -->
 	
 	<property name="ivy.install.version" value="2.4.0" />
 	<property name="ivy.jar.dir" value="${basedir}/ivy" />
@@ -79,24 +83,26 @@
 			<classpath path="${umple.core.jar}" />
 			<exclude name="**/.git" />
 		</javac>
-		<copy todir="${build.dir.resources}}">
-		    <fileset dir="src"
-		       includes="**/*.xml,**/*.properties,**/*.html" />
-		</copy>
+		
+		<!-- Uncommend if resources are required -->
+		<!-- <copy todir="${build.dir.resources}">
+		    <fileset dir="${src.dir.resources}"
+		       includes="**/*.properties,**/*.ecore" /> 
+		</copy> -->
 	</target>
 
 	<target name="test.compile" depends="init, compile" description="Compile test code">
-		<javac srcdir="${test.src.dir}" destdir="${test.build.dir.compile}" includeantruntime="true" >
+		<echo message="Compling test cases ${test.src.dir.java} -> ${test.build.dir.compile}" />
+		<javac srcdir="${test.src.dir.java}" destdir="${test.build.dir.compile}" includeantruntime="true" >
 			<classpath refid="test.path" />
 			<classpath path="${umple.core.jar}" />
 			<classpath path="${build.dir.compile}" />
 			<exclude name="**/.git" />
-			<exclude name="**/.svn" />
 		</javac>
-		<copy todir="${test.build.dir.resources}}">
-		        <fileset dir="src"
-		           includes="**/*.xml,**/*.properties,**/*.html" />
-		    </copy>
+		<copy todir="${test.build.dir.resources}">
+        <fileset dir="${test.src.dir.resources}"
+           includes="**/*.xml,**/*.properties,**/*.html,**/*.ecore" />
+    </copy>
 	</target>
 
 	<target name="test" depends="test.compile" description="Run TestNG test cases">
@@ -106,10 +112,12 @@
 			</classpath>
 		</taskdef>
 
-		<testng workingDir="${test.build.dir.report}" outputdir="${test.build.dir.report}">
+		<echo>Running tests -> ${test.build.dir.report}</echo>
+		<testng workingDir="${test.build.dir.report}" outputdir="${test.build.dir.report}" haltonfailure="on">
 			<classpath>
 				<pathelement location="${build.dir.compile}" />
 				<pathelement location="${test.build.dir.compile}" />
+	      <pathelement location="${umple.core.jar}" />
 				<path refid="ivylib.path.id" />
 			</classpath>
 			<classfileset dir="${test.build.dir.compile}" includes="**/*.class" />

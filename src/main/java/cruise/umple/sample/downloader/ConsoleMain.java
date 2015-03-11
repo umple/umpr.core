@@ -21,8 +21,11 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Charsets;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.io.Files;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -30,8 +33,11 @@ import com.google.inject.Injector;
 
 import cruise.umple.compiler.EcoreImportHandler;
 import cruise.umple.compiler.UmpleImportModel;
+import cruise.umple.sample.downloader.consistent.ConsistentRepositoryBuilder;
+import cruise.umple.sample.downloader.consistent.ConsistentsBuilder;
+import cruise.umple.sample.downloader.consistent.ConsistentsFactory;
+import cruise.umple.sample.downloader.consistent.ImportRepositorySet;
 import cruise.umple.sample.downloader.entities.ImportEntity;
-import cruise.umple.sample.downloader.util.Pair;
 
 public class ConsoleMain {
 
@@ -69,6 +75,7 @@ public class ConsoleMain {
     }
 
     private final Logger logger;
+    private final ConsistentsFactory consistentsFactory;
     private final Set<Repository> repositories;
 
     /**
@@ -78,9 +85,10 @@ public class ConsoleMain {
      * @param docFactory
      */
     @Inject
-    ConsoleMain(Logger logger, Set<Repository> repositories) {
+    ConsoleMain(Logger logger, ConsistentsFactory consistentsFactory, Set<Repository> repositories) {
         this.logger = logger;
         this.repositories = ImmutableSet.copyOf(repositories);
+        this.consistentsFactory = consistentsFactory;
     }
 
     public static void main(String[] args) throws IOException {
@@ -94,12 +102,7 @@ public class ConsoleMain {
         ConsoleMain main = in.getInstance(ConsoleMain.class);
         main.run(cfg);
     }
-    
-    public static class ImportedInfo {
-      
-      
-    }
-
+ 
     /**
      * Run the main console function which produces two lists of {@link ImportRuntimeData} constructs, pre-filtered into successful
      * and unsuccessful. 
@@ -108,7 +111,7 @@ public class ConsoleMain {
      *    and immutable. 
      * @since Feb 25, 2015
      */
-    public Pair<List<ImportRuntimeData>, List<ImportRuntimeData>> run(final Config cfg) {
+    public ImportRepositorySet run(final Config cfg) {
 
         cfg.outputFolder.mkdirs();
         cfg.importFileFolder.mkdirs();
@@ -130,7 +133,8 @@ public class ConsoleMain {
         }
         
         List<ImportRuntimeData> allData = urls.parallel()
-            .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr, tr.getRepository()))
+            .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr.getRepository().getFileType(),
+                                             tr, tr.getRepository()))
             .map(data -> {
               try {
                 data.setInputContent(data.getInputFunction().get());
@@ -193,15 +197,25 @@ public class ConsoleMain {
                 
                 return data;
             }).collect(Collectors.toList());
-
-        ImmutableList.Builder<ImportRuntimeData> successful = ImmutableList.builder(), 
-            failure = ImmutableList.builder();
-       
-        allData.stream().filter(ImportRuntimeData::isSuccessful).forEach(successful::add);
-        allData.stream().filter(d -> !d.isSuccessful()).forEach(failure::add);
+        
+        final Multimap<Repository, ImportRuntimeData> dataByRepo = Multimaps.index(allData, 
+                                                                                   ImportRuntimeData::getRepository);
+        final ConsistentsBuilder cbld = consistentsFactory.create(cfg.outputFolder.getAbsolutePath());
+        dataByRepo.asMap().entrySet().forEach(entry -> {
+          final Repository key = entry.getKey();
+          final ConsistentRepositoryBuilder repoBld = cbld.withRepository(key);
+          entry.getValue().forEach(data -> {
+            if (data.isSuccessful()) {
+              repoBld.addSuccessFile(data.getOutputPath().toString(), data.getFileType().toString());
+            } else {
+              repoBld.addFailedFile(data.getOutputPath().toString(), data.getFileType().toString(), 
+                  Throwables.getStackTraceAsString(data.getFailure().get()));
+            }
+          });
+        });
         
         logger.info("Saved Umple files to: " + cfg.outputFolder.getPath());
 
-        return new Pair<>(successful.build(), failure.build());
+        return cbld.getRepositorySet();
     }
 }
