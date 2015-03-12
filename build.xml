@@ -15,6 +15,9 @@
 	<property name="build.dir.compile" value="${build.dir}/" />
 	<property name="build.dir.resources" value="${build.dir.compile}" />
 
+	<!-- Tests -->
+	<property name="test.groups" value="" />
+	<property name="test.excludegroups" value="long-runtime" />
 	<property name="test.build.dir" value="./bin/test"/>
 	<property name="test.build.dir.report" value="./test-report" />
 	<property name="test.build.dir.compile" value="${test.build.dir}" />
@@ -113,7 +116,10 @@
 		</taskdef>
 
 		<echo>Running tests -> ${test.build.dir.report}</echo>
-		<testng workingDir="${test.build.dir.report}" outputdir="${test.build.dir.report}" haltonfailure="on">
+		<testng workingDir="${test.build.dir.report}" outputdir="${test.build.dir.report}" 
+			haltonfailure="on" 
+			groups="${test.groups}"
+			excludedgroups="${test.excludegroups}" >
 			<classpath>
 				<pathelement location="${build.dir.compile}" />
 				<pathelement location="${test.build.dir.compile}" />

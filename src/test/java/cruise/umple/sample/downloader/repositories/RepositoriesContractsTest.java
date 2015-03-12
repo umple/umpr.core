@@ -15,10 +15,8 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 
 import cruise.umple.sample.downloader.DownloaderModule;
-import cruise.umple.sample.downloader.FileType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.entities.ImportEntity;
-import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
 import cruise.umple.sample.downloader.util.Pair;
 
 /**
@@ -31,7 +29,9 @@ import cruise.umple.sample.downloader.util.Pair;
  * @since 24 Feb 2015
  *
  */
-@Guice(modules={MockDocumentFactoryModule.class})
+// Intentionally using the NON-mock version, this tests the implemented repositories that they match their contracts
+@Guice(modules={DownloaderModule.class})
+@Test(groups={"long-runtime"})
 public class RepositoriesContractsTest {
     
     @Inject
@@ -65,13 +65,13 @@ public class RepositoriesContractsTest {
     }
     
     /**
-     * Check all {@link FileType} to adhere to {@link Repository#getFileType()} specifications 
+     * Check all {@link FileType} to adhere to {@link Repository#getImportType()} specifications 
      * @since Feb 24, 2015
      */
     @Test
     public void checkFileType() {
       for (Repository r : allRepositories) {
-        assertNotNull(r.getFileType(), "Repository, " + r.getName() + ", has a null FileType.");
+        assertNotNull(r.getImportType(), "Repository, " + r.getName() + ", has a null FileType.");
       }
     }
     
@@ -83,7 +83,7 @@ public class RepositoriesContractsTest {
      */
     @Test
     public void checkURLs() {
-      logger.finer("Running Repository tests, these may take time depending on internet connection and repositories.");
+      logger.fine("Running Repository tests, these may take time depending on internet connection and repositories.");
       for (Repository r : allRepositories) {
         logger.finest("Repository: " + r.getName());
         

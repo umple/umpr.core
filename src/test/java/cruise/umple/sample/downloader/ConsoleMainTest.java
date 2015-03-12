@@ -2,6 +2,7 @@ package cruise.umple.sample.downloader;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.testng.Assert;
@@ -66,8 +67,8 @@ public class ConsoleMainTest {
     public void limitConfig() {
         cfg.limit = 1;
 
-        ImportRepositorySet result = main.run(cfg);
-        int count = result.getRepositories().stream().map(ImportRepository::numberOfFiles).reduce(0, (r1, r2) -> r1 + r2);
+        List<ImportRuntimeData> data = main.run(cfg);
+        int count = data.size();
 
         Assert.assertEquals(count, cfg.limit.intValue(), "Did not limit files to " + cfg.limit);
     }
@@ -80,9 +81,9 @@ public class ConsoleMainTest {
     @Test
     public void testRepositories() {
         cfg.limit = 3; // get all of them
-        main.run(cfg);
+        List<?> data = main.run(cfg);
 
-        Assert.assertEquals(getOutputFiles().count(), cfg.limit.longValue(),
+        Assert.assertEquals(data.size(), cfg.limit.longValue(),
                 "Failed to import properly.");
     }
 

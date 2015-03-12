@@ -28,7 +28,7 @@ public interface Repository {
      *
      * @return The type of file
      */
-    public FileType getFileType();
+    public ImportType getImportType();
 
     /**
      * Get a list of URL instances where the import files may be stored.

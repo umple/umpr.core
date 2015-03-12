@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import cruise.umple.sample.downloader.DocumentFactory;
-import cruise.umple.sample.downloader.FileType;
+import cruise.umple.sample.downloader.ImportType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.entities.ImportEntity;
 import cruise.umple.sample.downloader.entities.ImportEntityFactory;
@@ -60,8 +60,8 @@ class AtlanZooRepository implements Repository {
     }
 
     @Override
-    public FileType getFileType() {
-        return FileType.ECORE;
+    public ImportType getImportType() {
+        return ImportType.ECORE;
     }
 
     @Override
@@ -85,7 +85,7 @@ class AtlanZooRepository implements Repository {
                         throw new IllegalArgumentException(mue);
                     }
                 })
-                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), getFileType(), url))
+                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), getImportType(), url))
                 .collect(Collectors.toList());
     }
 

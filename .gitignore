@@ -3,7 +3,9 @@ bin/
 lib/
 .project
 .classpath
+
 src/gen/
+ivy/
 
 *.class
 

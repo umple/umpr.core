@@ -17,6 +17,8 @@
         
         <!-- Testing -->
         <dependency org="org.testng" name="testng" rev="6.8.21" conf="test->default"/>
+        <dependency org="com.jayway.jsonpath" name="json-path-assert" rev="1.2.0" conf="test->default"/>
+        
 
     </dependencies>
 

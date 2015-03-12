@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
-import cruise.umple.sample.downloader.FileType;
+import cruise.umple.sample.downloader.ImportType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.util.Networks;
 
@@ -28,7 +28,7 @@ final class URLEntity implements ImportEntity {
   
   @AssistedInject
   URLEntity(Logger log, ImportEntityFactory factory,
-      @Assisted FileType fileType, @Assisted Repository repository, 
+      @Assisted ImportType fileType, @Assisted Repository repository, 
       @Assisted Path path, @Assisted URL url) {
     this.log = log;
     
@@ -64,8 +64,8 @@ final class URLEntity implements ImportEntity {
   }
   
   @Override
-  public FileType getFileType() {
-    return wrappedEntity.getFileType();
+  public ImportType getImportType() {
+    return wrappedEntity.getImportType();
   }
 
 }

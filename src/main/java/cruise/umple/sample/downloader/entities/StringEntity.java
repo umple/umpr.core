@@ -8,9 +8,8 @@ import java.util.logging.Logger;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import com.google.inject.name.Named;
 
-import cruise.umple.sample.downloader.FileType;
+import cruise.umple.sample.downloader.ImportType;
 import cruise.umple.sample.downloader.Repository;
 
 /**
@@ -27,7 +26,7 @@ final class StringEntity implements ImportEntity {
   private final Supplier<String> content;
   private final Repository repository;
   private final Path path;
-  private final FileType fileType;
+  private final ImportType fileType;
   
   /**
    * Creates a new instance of StringEntity.
@@ -39,7 +38,7 @@ final class StringEntity implements ImportEntity {
    */
   @AssistedInject
   StringEntity(Logger log, 
-      @Assisted FileType fileType, @Assisted Repository repository,
+      @Assisted ImportType fileType, @Assisted Repository repository,
       @Assisted Path path, @Assisted Supplier<String> content) {
     this.log = log;
     
@@ -61,7 +60,7 @@ final class StringEntity implements ImportEntity {
    */
   @AssistedInject
   StringEntity(Logger log, 
-      @Assisted FileType fileType, @Assisted Repository repository, 
+      @Assisted ImportType fileType, @Assisted Repository repository, 
       @Assisted Path path, @Assisted String content) {
     this.log = log;
     
@@ -89,7 +88,7 @@ final class StringEntity implements ImportEntity {
   }
   
   @Override
-  public FileType getFileType() {
+  public ImportType getImportType() {
     return fileType;
   }
 }

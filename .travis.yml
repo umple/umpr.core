@@ -28,7 +28,7 @@ before_install:
 
 script:
   - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar compile
-  - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar test
+  - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar -Dtest.excludegroups="" test
 
 os:
   - linux

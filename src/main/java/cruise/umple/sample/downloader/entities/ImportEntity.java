@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
-import cruise.umple.sample.downloader.FileType;
+import cruise.umple.sample.downloader.ImportType;
 import cruise.umple.sample.downloader.Repository;
 
 /**
@@ -38,7 +38,7 @@ public interface ImportEntity extends Supplier<String> {
    * Return the file type. 
    * @return Non-{@code null} {@link String} of the file type. 
    */
-  public abstract FileType getFileType();
+  public abstract ImportType getImportType();
   
   /**
    * Create and open an {@link InputStream} instance of the imported entity's content. It is the callers responsibility
