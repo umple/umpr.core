@@ -1,7 +1,5 @@
 namespace cruise.umple.sample.downloader.consistent;
 
-use ImportType.ump;
-
 class ImportFile {
   depend cruise.umple.sample.downloader.ImportType;
 
