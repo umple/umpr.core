@@ -69,7 +69,7 @@ public class ConsistentsBuilder {
     
     log.finest("Adding repository: " + repository);
     
-    return factory.createReposBuilder(this, repository.getName(), this.repositorySet);
+    return factory.createReposBuilder(this, repository.getName(), repository.getDescription(), this.repositorySet);
   }
   
   

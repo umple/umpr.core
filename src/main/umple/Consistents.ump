@@ -17,6 +17,8 @@ class ImportFile {
 class ImportRepository {
   depend cruise.umple.sample.downloader.ImportType;
   
+  String name;
+  String description;
   String path;
   
   1 -- * ImportFile files;

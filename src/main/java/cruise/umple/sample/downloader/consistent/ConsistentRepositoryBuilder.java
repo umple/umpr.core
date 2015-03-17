@@ -26,10 +26,13 @@ public class ConsistentRepositoryBuilder {
   @AssistedInject
   ConsistentRepositoryBuilder(Logger log, 
       @Assisted final ConsistentsBuilder parent, 
-      @Assisted final String name, 
+      @Assisted("name") final String name, 
+      @Assisted("description") final String description,
       @Assisted final ImportRepositorySet repSet) {
-    this.importRepos = new ImportRepository(checkNotNull(name), checkNotNull(repSet));
     this.log = log;
+    
+    this.importRepos = new ImportRepository(checkNotNull(name), checkNotNull(description), checkNotNull(name), 
+        checkNotNull(repSet));
     this.parent = checkNotNull(parent);
   }
   

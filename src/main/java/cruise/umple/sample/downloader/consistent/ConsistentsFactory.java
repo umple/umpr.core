@@ -1,5 +1,7 @@
 package cruise.umple.sample.downloader.consistent;
 
+import com.google.inject.assistedinject.Assisted;
+
 
 /**
  * Guice assisted factory for creating builders for Consistent groups. 
@@ -22,5 +24,6 @@ public interface ConsistentsFactory {
    * @return Non-{@code null} repository builder 
    */
   ConsistentRepositoryBuilder createReposBuilder(final ConsistentsBuilder bld, 
-      final String name, final ImportRepositorySet repSet);
+      @Assisted("name") final String name, @Assisted("description") final String description,
+      final ImportRepositorySet repSet);
 }
