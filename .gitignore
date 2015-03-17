@@ -3,6 +3,7 @@ bin/
 lib/
 .project
 .classpath
+.settings/
 
 src/gen/
 ivy/
