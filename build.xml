@@ -32,7 +32,7 @@
   <property name="src.dir.gen.umple" value="${src.dir.gen}/umple" />
 	<property name="test.src.dir" value="${src.dir}/test" />
   <property name="test.src.dir.java" value="${test.src.dir}/java"/>
-  <property name="test.src.dir.resources" value="${test.src.dir}/resources"/>
+  <property name="test.src.dir.resources" value="${test.src.dir}/fixtures"/>
 
 	<!-- Ivy -->
 	
