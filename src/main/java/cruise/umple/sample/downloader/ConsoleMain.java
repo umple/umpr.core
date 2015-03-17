@@ -2,9 +2,12 @@ package cruise.umple.sample.downloader;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +24,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Charsets;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.inject.Guice;
@@ -29,6 +33,8 @@ import com.google.inject.Injector;
 
 import cruise.umple.compiler.EcoreImportHandler;
 import cruise.umple.compiler.UmpleImportModel;
+import cruise.umple.sample.downloader.consistent.Consistents;
+import cruise.umple.sample.downloader.consistent.ImportRepositorySet;
 import cruise.umple.sample.downloader.entities.ImportEntity;
 
 public class ConsoleMain {
@@ -188,10 +194,23 @@ public class ConsoleMain {
                 return data;
             }).collect(Collectors.toList());
         
-        
-        
         logger.info("Saved Umple files to: " + cfg.outputFolder.getPath());
+        
+        final ImportRepositorySet set = Consistents.buildImportRepositorySet(cfg.outputFolder.toPath(), allData);
 
+        final String json = Consistents.toJson(set);
+        
+        final Path jsonPath = cfg.outputFolder.toPath().resolve("meta.json");
+        
+        try (FileOutputStream fos = new FileOutputStream(jsonPath.toFile())) {
+          IOUtils.write(json, fos);
+          
+          logger.info("Metadata written to " + jsonPath);
+        } catch (IOException e) {
+          logger.severe(() -> "Exception writing metadata to file.\n" + Throwables.getStackTraceAsString(e));
+          throw Throwables.propagate(e);
+        }
+        
         return allData;
     }
 }

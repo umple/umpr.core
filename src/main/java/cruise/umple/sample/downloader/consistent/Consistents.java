@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Throwables;
@@ -48,6 +49,7 @@ public abstract class Consistents {
   private static final ObjectMapper mapper = new ObjectMapper();
   static {
     mapper.registerModule(jsonModule);
+    mapper.enable(SerializationFeature.INDENT_OUTPUT);
   }
 
   private Consistents() { }

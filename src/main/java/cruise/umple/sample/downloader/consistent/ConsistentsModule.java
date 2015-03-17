@@ -25,7 +25,7 @@ public class ConsistentsModule extends AbstractModule {
       .implement(ConsistentRepositoryBuilder.class, ConsistentRepositoryBuilder.class)
       .build(ConsistentsFactory.class));
     
-    
+    requestStaticInjection(Consistents.class);
 
   }
 
