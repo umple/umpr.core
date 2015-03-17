@@ -27,6 +27,7 @@ before_install:
   - popd
 
 script:
+  - cd $TRAVIS_BUILD_DIR
   - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar compile
   - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar -Dtest.excludegroups="" test
 
