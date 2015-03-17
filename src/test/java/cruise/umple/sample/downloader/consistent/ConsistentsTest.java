@@ -10,24 +10,20 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.jayway.jsonassert.JsonAssert;
 import com.jayway.jsonassert.JsonAsserter;
-import com.jayway.jsonpath.JsonPath;
 
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.repositories.TestRepository;
 import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
 
-@Guice(modules={MockDocumentFactoryModule.class}) @SuppressWarnings("unchecked")
+@Guice(modules={MockDocumentFactoryModule.class})
 @Test
 public class ConsistentsTest {
   
   private final ConsistentsFactory factory;
-  
-  private ObjectMapper mapper = new ObjectMapper();
   
   private ConsistentsBuilder bld;
   private final Set<Repository> repos;
@@ -43,11 +39,9 @@ public class ConsistentsTest {
   public void setup() {
     bld = factory.create(".");
   }
-  
  
   @Test
   public void toJsonNoRepositories() throws JsonParseException, JsonMappingException, IOException {
-//    throw new SkipException("Skipping, working later");
     
     final ImportRepositorySet fromBld = bld.getRepositorySet();
     final String json = Consistents.toJson(fromBld);

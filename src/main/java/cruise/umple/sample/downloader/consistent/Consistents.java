@@ -19,6 +19,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
 
+import cruise.umple.sample.downloader.ConsoleMain;
 import cruise.umple.sample.downloader.ImportRuntimeData;
 import cruise.umple.sample.downloader.Repository;
 
@@ -34,21 +35,31 @@ public abstract class Consistents {
   
   private static final SimpleModule jsonModule;
   static {
+    // initialize the Jackson module
     jsonModule = new SimpleModule();
     jsonModule.addSerializer(ImportRepositorySet.class, new ImportRepositorySetSerializer());
     jsonModule.addSerializer(ImportRepository.class, new ImportRepositorySerializer());
     jsonModule.addSerializer(ImportFile.class, new ImportFileSerializer());
   }
   
-  
+  /**
+   * {@link ObjectMapper} for mapping Java objects to Json
+   */
   private static final ObjectMapper mapper = new ObjectMapper();
-  
   static {
     mapper.registerModule(jsonModule);
   }
 
   private Consistents() { }
   
+  /**
+   * Builds an {@link ImportRepositorySet} from the runtime data produced by the {@link ConsoleMain} using 
+   * {@link ConsistentsBuilder}.  
+   * 
+   * @param outputFolder The location the repository lives. 
+   * @param allData {@link List} of {@link ImportRuntimeData} to map into new the consistent data structures. 
+   * @return Non-{@code null} instance
+   */
   public static ImportRepositorySet buildImportRepositorySet(final Path outputFolder, 
                                                              final List<ImportRuntimeData> allData) {
     final Multimap<Repository, ImportRuntimeData> dataByRepo = Multimaps.index(allData, 
@@ -71,11 +82,17 @@ public abstract class Consistents {
     return cbld.getRepositorySet();
   }
   
-  public static <T> String toJson(T repository) {
-    
-    
+  /**
+   * Converts a POJO to JSON string. 
+   * @param obj Object to convert 
+   * @return Non-{@code null} JSON string. 
+   * 
+   * @throws IllegalStateException if an {@link IOException} is thrown by 
+   *    {@link ObjectMapper#writeValue(java.io.OutputStream, Object)}
+   */
+  public static <T> String toJson(final T obj) {
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-      mapper.writeValue(baos, repository);
+      mapper.writeValue(baos, obj);
       
       return baos.toString();
     } catch (IOException e) {
@@ -84,6 +101,12 @@ public abstract class Consistents {
   }
   
   
+  /**
+   * Converts an {@link ImportRepositorySet} to JSON
+   * 
+   * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
+   * @since 17 Mar 2015
+   */
   private static class ImportRepositorySetSerializer extends JsonSerializer<ImportRepositorySet> {
 
     @Override
@@ -109,6 +132,12 @@ public abstract class Consistents {
     }
   }
     
+  /**
+   * Converts an {@link ImportRepository} to JSON
+   * 
+   * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
+   * @since 17 Mar 2015
+   */
   private static class ImportRepositorySerializer extends JsonSerializer<ImportRepository> {
 
     @Override
@@ -133,6 +162,12 @@ public abstract class Consistents {
     }
   }
   
+  /**
+   * Converts an {@link ImportFile} to JSON
+   * 
+   * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
+   * @since 17 Mar 2015
+   */
   private static class ImportFileSerializer extends JsonSerializer<ImportFile> {
 
     @Override
