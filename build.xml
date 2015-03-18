@@ -8,11 +8,11 @@
 	<!-- 
   <property name="skip.tests" value="true"/>
    -->
-	
+
 	<exec executable="git" outputproperty="git.revision">
-    <arg value="describe" />
-    <arg value="--always" />
-  </exec>
+		<arg value="describe" />
+		<arg value="--always" />
+	</exec>
 	<property name="version" value="0.0.0-${git.revision}" />
 
 	<property name="build.dir" value="./bin" />
@@ -26,26 +26,27 @@
 	<property name="build.dir.test" value="./bin/test"/>
 	<property name="build.dir.test.report" value="./test-report" />
 	<property name="build.dir.test.compile" value="${build.dir.test}" />
-  <property name="build.dir.test.resources" value="${build.dir.test.compile}" />
+	<property name="build.dir.test.resources" value="${build.dir.test.compile}" />
 
-	<!-- src directories --> 
+	<!-- src directories -->
 	<property name="src.dir" value="./src" />
 	<property name="src.dir.main" value="${src.dir}/main" />
-  <property name="src.dir.main.java" value="${src.dir.main}/java" />
+	<property name="src.dir.main.java" value="${src.dir.main}/java" />
 	<property name="src.dir.main.resources" value="${src.dir.main}/resources" />
 	<property name="src.dir.main.umple" value="${src.dir.main}/umple" />
-  <property name="src.dir.gen" value="${src.dir}/gen/" />
-  <property name="src.dir.gen.umple" value="${src.dir.gen}/umple" />
+	<property name="src.dir.gen" value="${src.dir}/gen/" />
+	<property name="src.dir.gen.umple" value="${src.dir.gen}/umple" />
 	<property name="src.dir.test" value="${src.dir}/test" />
-  <property name="src.dir.test.java" value="${src.dir.test}/java"/>
-  <property name="src.dir.test.resources" value="${src.dir.test}/fixtures"/>
-	
+	<property name="src.dir.test.java" value="${src.dir.test}/java"/>
+	<property name="src.dir.test.resources" value="${src.dir.test}/fixtures"/>
+
 	<!-- distribution -->
 	<property name="dist.dir" value="${build.dir}/target" />
-	<property name="dist.dependency.jar" value="${dist.dir}/${ant.project.name}-dependencies-${version}.jar" />
-	<property name="dist.target.jar" value="${dist.dir}/${ant.project.name}-${version}.jar" />
+	<property name="dist.dependency.jar" value="${dist.dir}/dependencies-all-${version}.jar" />
+	<property name="dist.target.jar" value="${dist.dir}/${ant.project.name}-lib-${version}.jar" />
+	<property name="dist.target.fat.jar" value="${dist.dir}/${ant.project.name}-${version}.jar" />
 	<property name="dist.main.class" value="cruise.umple.sample.downloader.ConsoleMain" />
-	
+
 	<!-- Ivy -->
 	<property name="ivy.install.version" value="2.4.0" />
 	<property name="ivy.jar.dir" value="${basedir}/ivy" />
@@ -62,7 +63,7 @@
 		</path>
 		<taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path" />
 	</target>
-	
+
 	<target name="download-ivy" unless="skip.download">
 		<mkdir dir="${ivy.jar.dir}" />
 		<get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" 
@@ -79,24 +80,24 @@
 			<fileset dir="${ivy.lib.dir}" />
 		</path>
 	</target>
-	
+
 	<target name="umpleGen" depends="init" description="Run umple against models shared between web interface">
-	 <umplec src="${src.dir.main.umple}/Master.ump" dest="${src.dir.gen.umple}" generate="Java" />
+		<umplec src="${src.dir.main.umple}/Master.ump" dest="${src.dir.gen.umple}" generate="Java" />
 	</target>
 
 	<target name="compile" depends="init,umpleGen" description="Compile core code">
 		<javac srcdir="${src.dir.gen.umple}" destdir="${build.dir.main.compile}" includeantruntime="true" >
-      <classpath refid="build.path" />
-      <classpath path="${umple.core.jar}" />
-      <exclude name="**/.git" />
-    </javac>
-		
+			<classpath refid="build.path" />
+			<classpath path="${umple.core.jar}" />
+			<exclude name="**/.git" />
+		</javac>
+
 		<javac srcdir="${src.dir.main.java}" destdir="${build.dir.main.compile}" includeantruntime="true" >
 			<classpath refid="build.path" />
 			<classpath path="${umple.core.jar}" />
 			<exclude name="**/.git" />
 		</javac>
-		
+
 		<!-- Uncommend if resources are required -->
 		<!-- <copy todir="${build.dir.resources}">
 		    <fileset dir="${src.dir.resources}"
@@ -113,9 +114,9 @@
 			<exclude name="**/.git" />
 		</javac>
 		<copy todir="${build.dir.test.resources}">
-        <fileset dir="${src.dir.test.resources}"
+			<fileset dir="${src.dir.test.resources}"
            includes="**/*.xml,**/*.properties,**/*.html,**/*.ecore" />
-    </copy>
+		</copy>
 	</target>
 
 	<target name="test" depends="test.compile" description="Run TestNG test cases">
@@ -133,65 +134,66 @@
 			<classpath>
 				<pathelement location="${build.dir.main.compile}" />
 				<pathelement location="${build.dir.test.compile}" />
-	      <pathelement location="${umple.core.jar}" />
+				<pathelement location="${umple.core.jar}" />
 				<path refid="ivylib.path.id" />
 			</classpath>
 			<classfileset dir="${build.dir.test.compile}" includes="**/*.class" />
 		</testng>
 
 	</target>
-	
+
 	<!-- Group all dependencies into a big dependency-all.jar -->
-  <target name="package.dependencies" depends="resolve">
-    <mkdir dir="${dist.dir}" />
- 
-    <jar jarfile="${dist.dependency.jar}">
-      <zipgroupfileset dir="${ivy.lib.dir}">
-        <include name="**/*.jar" />
-      </zipgroupfileset>
-    </jar>
- 
-  </target>
-	 
-  <!-- jar it, extract above dependency-all.jar and zip it with project files -->
-  <target name="package" depends="compile, package.dependencies" 
-                description="package, output to JAR">
- 
-    <mkdir dir="${dist.dir}" />
- 
-    <jar jarfile="${dist.target.jar}" basedir="${build.dir.main}">
-      <manifest>
-        <attribute name="Main-Class" value="${dist.main.class}" />
-      	
-      </manifest>
-    	<zipfileset src="${dist.dependency.jar}" excludes="META-INF/*.SF" />
-    	<zipfileset src="${umple.core.jar}" excludes="META-INF/*.SF" />
-    </jar>
- 
-  </target>
+	<target name="package.dependencies" depends="resolve">
+		<mkdir dir="${dist.dir}" />
+
+		<jar jarfile="${dist.dependency.jar}">
+			<zipgroupfileset dir="${ivy.lib.dir}">
+				<include name="**/*.jar" />
+			</zipgroupfileset>
+			<zipfileset src="${umple.core.jar}" excludes="META-INF/*.SF" />
+		</jar>
+
+	</target>
+
+	<!-- jar it, extract above dependency-all.jar and zip it with project files -->
+	<target name="package" depends="compile, package.dependencies" description="package, output to JAR">
+
+		<mkdir dir="${dist.dir}" />
+
+		<jar jarfile="${dist.target.jar}" basedir="${build.dir.main}" />
+
+		<jar jarfile="${dist.target.fat.jar}" basedir="${build.dir.main}">
+			<manifest>
+				<attribute name="Main-Class" value="${dist.main.class}" />
+			</manifest>
+			<zipfileset src="${dist.dependency.jar}" excludes="META-INF/*.SF" />
+			<zipfileset src="${dist.target.jar}" excludes="META-INF/*.SF" />
+		</jar>
+
+	</target>
 
 	<target name="clean" description="cleanup module">
 		<delete dir="${build.dir.main}"/>
 		<delete dir="${build.dir.test}"/>
 		<delete includeemptydirs="true">
-	    <fileset dir="${src.dir.gen.umple}" excludes="**/.gitkeep" defaultexcludes="false"/>
-	  </delete>
+			<fileset dir="${src.dir.gen.umple}" excludes="**/.gitkeep" defaultexcludes="false"/>
+		</delete>
 		<delete dir="${dist.dir}" />
 	</target>
-	
+
 	<target name="real-clean" depends="clean" description="Clean-up everything, including dependencies">
-	  <delete dir="${ivy.jar.dir}" />
+		<delete dir="${ivy.jar.dir}" />
 		<delete dir="${ivy.lib.dir}" />
 	</target>
 
 	<target name="init" description="Build initialization" depends="install-ivy, resolve">
 		<mkdir dir="${build.dir.main}" />
 		<mkdir dir="${build.dir.main.compile}" />
-		
+
 		<mkdir dir="${build.dir.test}" />
 		<mkdir dir="${build.dir.test.compile}" />
 	</target>
-	
+
 	<target name="build.modules" depends="clean, init, compile" description="build all modules"/>
 
 	<target name="all" depends="build.modules" description="build all"/>
