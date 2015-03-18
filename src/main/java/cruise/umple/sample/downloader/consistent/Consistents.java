@@ -71,14 +71,16 @@ public abstract class Consistents {
     dataByRepo.asMap().entrySet().forEach(entry -> {
         final Repository key = entry.getKey();
         final ConsistentRepositoryBuilder repoBld = cbld.withRepository(key);
+        final Path repoPath = outputFolder.resolve("./" + key.getName()).normalize();
         entry.getValue().forEach(data -> {
-              if (data.isSuccessful()) {
-                repoBld.addSuccessFile(data.getOutputPath().toString(), data.getImportType());
-              } else {
-                repoBld.addFailedFile(data.getOutputPath().toString(),
-                    data.getImportType(), Throwables.getStackTraceAsString(data.getFailure().get()));
-              }
-            });
+          final String outpath = repoPath.relativize(data.getOutputPath()).normalize().toString();
+          if (data.isSuccessful()) {
+            repoBld.addSuccessFile(outpath, data.getImportType());
+          } else {
+            repoBld.addFailedFile(outpath, data.getImportType(), 
+                Throwables.getStackTraceAsString(data.getFailure().get()));
+          }
+        });
       });
     
     return cbld.getRepositorySet();
