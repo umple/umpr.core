@@ -2,16 +2,15 @@ package cruise.umple.sample.downloader;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +24,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.inject.Guice;
@@ -34,8 +33,9 @@ import com.google.inject.Injector;
 
 import cruise.umple.compiler.EcoreImportHandler;
 import cruise.umple.compiler.UmpleImportModel;
+import cruise.umple.sample.downloader.consistent.Consistents;
+import cruise.umple.sample.downloader.consistent.ImportRepositorySet;
 import cruise.umple.sample.downloader.entities.ImportEntity;
-import cruise.umple.sample.downloader.util.Pair;
 
 public class ConsoleMain {
 
@@ -98,94 +98,16 @@ public class ConsoleMain {
         ConsoleMain main = in.getInstance(ConsoleMain.class);
         main.run(cfg);
     }
-    
-    /**
-     * Stores data throughout the process
-     * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
-     *
-     */
-    static class ImportRuntimeData {
-      private final Path outputFile;
-      private Optional<String> umpleContent = Optional.empty();
-      
-      private final Supplier<String> inputFunction;
-      private Optional<String> inputContent = Optional.empty();
-      
-      private final Repository repository;
-      
-      // holds an exception if errors occur
-      private Optional<Exception> failure = Optional.empty();
-      
-      /**
-       * Create a new instance of Data, a simple struct
-       * @param outputFolder
-       * @param input
-       * @param repository
-       */
-      ImportRuntimeData(Path outputFolder, Path inputName, Supplier<String> inputFunc, Repository repository) {        
-        this.outputFile = Paths.get(outputFolder.toFile().getAbsolutePath(),
-            repository.getName(), inputName.getFileName().toString() + ".ump");
-        this.repository = repository;
-        this.inputFunction = inputFunc;
-      }
-
-      public Optional<String> getInputContent() {
-        return inputContent;
-      }
-
-      public void setInputContent(String content) {
-        this.inputContent = Optional.of(content);
-      }
-
-      public Path getOutputPath() {
-        return outputFile;
-      }
-
-      public Supplier<String> getInputFunction() {
-        return inputFunction;
-      }
-
-      public Repository getRepository() {
-        return repository;
-      }
-      
-      public boolean isSuccessful() {
-        return !failure.isPresent();
-      }
-
-      public Optional<Exception> getFailure() {
-        return failure;
-      }
-
-      public void setFailure(final Exception failure) {
-        this.failure = Optional.of(failure);
-      }
-      
-      public Optional<String> getUmpleContent() {
-        return umpleContent;
-      }
-
-      public void setUmpleContent(String umpleContent) {
-        this.umpleContent = Optional.of(umpleContent);
-      }
-
-      
-    }
-    
-    public static class ImportedInfo {
-      
-      
-    }
-
+ 
     /**
      * Run the main console function which produces two lists of {@link ImportRuntimeData} constructs, pre-filtered into successful
      * and unsuccessful. 
      * @param cfg Configuration data
-     * @return Two lists, first list is successful data, second is unsucessful. Both lists are non-null, possibly empty
+     * @return Two lists, first list is successful data, second is unsuccessful. Both lists are non-null, possibly empty
      *    and immutable. 
      * @since Feb 25, 2015
      */
-    public Pair<List<ImportRuntimeData>, List<ImportRuntimeData>> run(final Config cfg) {
+    public List<ImportRuntimeData> run(final Config cfg) {
 
         cfg.outputFolder.mkdirs();
         cfg.importFileFolder.mkdirs();
@@ -207,7 +129,8 @@ public class ConsoleMain {
         }
         
         List<ImportRuntimeData> allData = urls.parallel()
-            .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr, tr.getRepository()))
+            .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr.getRepository().getImportType(),
+                                             tr, tr.getRepository()))
             .map(data -> {
               try {
                 data.setInputContent(data.getInputFunction().get());
@@ -270,15 +193,24 @@ public class ConsoleMain {
                 
                 return data;
             }).collect(Collectors.toList());
-
-        ImmutableList.Builder<ImportRuntimeData> successful = ImmutableList.builder(), 
-            failure = ImmutableList.builder();
-       
-        allData.stream().filter(ImportRuntimeData::isSuccessful).forEach(successful::add);
-        allData.stream().filter(d -> !d.isSuccessful()).forEach(failure::add);
         
         logger.info("Saved Umple files to: " + cfg.outputFolder.getPath());
+        
+        final ImportRepositorySet set = Consistents.buildImportRepositorySet(cfg.outputFolder.toPath(), allData);
 
-        return new Pair<>(successful.build(), failure.build());
+        final String json = Consistents.toJson(set);
+        
+        final Path jsonPath = cfg.outputFolder.toPath().resolve("meta.json");
+        
+        try (FileOutputStream fos = new FileOutputStream(jsonPath.toFile())) {
+          IOUtils.write(json, fos);
+          
+          logger.info("Metadata written to " + jsonPath);
+        } catch (IOException e) {
+          logger.severe(() -> "Exception writing metadata to file.\n" + Throwables.getStackTraceAsString(e));
+          throw Throwables.propagate(e);
+        }
+        
+        return allData;
     }
 }

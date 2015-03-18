@@ -4,19 +4,32 @@ jdk:
   - oraclejdk8
 
 before_install:
-  - export UMPLE_DIR=~/umple/Umple
-  - git clone --depth=2 --branch=master https://github.com/umple/Umple.git $UMPLE_DIR
-  
-before_script:
+#  - wget https://github.com/umple/Umple/raw/master/lib/umple.jar -O ./umple.jar
+#  - export UMPLE_JAR=`pwd`"/umple.jar"
+
+# TODO REMOVE WHEN IVY IN THE MIX:
+
+  - export UMPLE_DIR=~/umple
+  - git clone --depth=2 https://github.com/umple/Umple.git $UMPLE_DIR
+  - pushd $UMPLE_DIR
+
+  # install dependencies
+  - export TEMP_BUILD_DIR=$TRAVIS_BUILD_DIR
+  - export TRAVIS_BUILD_DIR=$UMPLE_DIR
+  - chmod 755 -R ./travis # to deal with SVN possibly not holding permissions
+  - ./travis/deps.sh # run linux or osx depending on environment
+  - export TRAVIS_BUILD_DIR=$TEMP_BUILD_DIR
+
   # build
-  - cd $UMPLE_DIR/build/
-  - ant -Dmyenv=local -f build.umple.xml first-build
-  - ant -Dmyenv=local -f build.umple.xml umpleSelf compile packageMainJar # ignore tests, we don't care about them 
+  - cd build/
+  - ant -Dmyenv=travis -f build.umple.xml first-build
+  - ant -Dmyenv=travis -f build.umple.xml umpleSelf compile packageJars 
+  - popd
 
 script:
   - cd $TRAVIS_BUILD_DIR
   - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar compile
-  - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar test
+  - ant -f build.xml -Dumple.core.jar=$UMPLE_DIR/dist/umple.jar -Dtest.excludegroups="" test
 
 os:
   - linux

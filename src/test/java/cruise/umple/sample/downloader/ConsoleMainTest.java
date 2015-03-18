@@ -3,10 +3,7 @@ package cruise.umple.sample.downloader;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
-
-import javax.xml.crypto.Data;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -17,18 +14,15 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-import cruise.umple.sample.downloader.ConsoleMain.ImportRuntimeData;
+import cruise.umple.sample.downloader.consistent.ImportRepository;
+import cruise.umple.sample.downloader.consistent.ImportRepositorySet;
 import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
-import cruise.umple.sample.downloader.util.Pair;
 
 /**
  * Created by kevin on 15-02-23.
  */
-@Guice(modules={DownloaderModule.class, MockDocumentFactoryModule.class})
+@Guice(modules={MockDocumentFactoryModule.class})
 public class ConsoleMainTest {
-
-    @Inject 
-    private Set<Repository> repositorySet;
 
     @Inject
     private Provider<ConsoleMain> mainProvider;
@@ -45,7 +39,7 @@ public class ConsoleMainTest {
     @BeforeMethod
     public void beforeMethod() {
         cfg = new ConsoleMain.Config();
-        cfg.limit = 5; // for speed
+        cfg.limit = 3; // for speed
         cfg.outputFolder = Files.createTempDir();
         cfg.outputFolder.deleteOnExit();
 
@@ -71,13 +65,12 @@ public class ConsoleMainTest {
      */
     @Test
     public void limitConfig() {
-        cfg.limit = 10;
+        cfg.limit = 1;
 
-        Pair<List<ImportRuntimeData>, List<ImportRuntimeData>> result = main.run(cfg);
+        List<ImportRuntimeData> data = main.run(cfg);
+        int count = data.size();
 
-        Assert.assertEquals(result.first.size() + result.second.size(),
-                cfg.limit.intValue(),
-                "Did not limit files to " + cfg.limit);
+        Assert.assertEquals(count, cfg.limit.intValue(), "Did not limit files to " + cfg.limit);
     }
 
     /**
@@ -87,11 +80,10 @@ public class ConsoleMainTest {
      */
     @Test
     public void testRepositories() {
-        cfg.limit = 5; // get all of them
-        main.run(cfg);
+        cfg.limit = 3; // get all of them
+        List<?> data = main.run(cfg);
 
-        Assert.assertEquals(getOutputFiles().count(),
-                cfg.limit.longValue(),
+        Assert.assertEquals(data.size(), cfg.limit.longValue(),
                 "Failed to import properly.");
     }
 

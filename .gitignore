@@ -3,9 +3,16 @@ bin/
 lib/
 .project
 .classpath
+.settings/
+
+src/gen/
+ivy/
 
 *.class
 
+.externalToolBuilders/
+*.swp
+test-report/
 
 # idea
 .idea/

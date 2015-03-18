@@ -1,0 +1,34 @@
+namespace cruise.umple.sample.downloader.consistent;
+
+class ImportFile {
+  depend cruise.umple.sample.downloader.ImportType;
+
+  String path;
+  
+  ImportType importType;
+  
+  Boolean successful;
+  
+  String message;
+}
+
+class ImportRepository {
+  depend cruise.umple.sample.downloader.ImportType;
+  
+  String name;
+  String description;
+  String path;
+  
+  1 -- * ImportFile files;
+}
+
+class ImportRepositorySet {
+  
+  Date date;
+  Time time;
+  
+  String rootPath;
+  
+  1 -- * ImportRepository repositories;
+
+}

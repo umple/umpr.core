@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
+import cruise.umple.sample.downloader.ImportType;
 import cruise.umple.sample.downloader.Repository;
 
 /**
@@ -25,6 +26,7 @@ final class StringEntity implements ImportEntity {
   private final Supplier<String> content;
   private final Repository repository;
   private final Path path;
+  private final ImportType fileType;
   
   /**
    * Creates a new instance of StringEntity.
@@ -35,13 +37,16 @@ final class StringEntity implements ImportEntity {
    * @since Mar 2, 2015
    */
   @AssistedInject
-  StringEntity(Logger log, @Assisted Repository repository, @Assisted Path path, @Assisted Supplier<String> content) {
+  StringEntity(Logger log, 
+      @Assisted ImportType fileType, @Assisted Repository repository,
+      @Assisted Path path, @Assisted Supplier<String> content) {
     this.log = log;
     
     // params
     this.content = checkNotNull(content);
     this.repository = checkNotNull(repository);
     this.path = checkNotNull(path);
+    this.fileType = checkNotNull(fileType);
   }
   
   /**
@@ -54,8 +59,17 @@ final class StringEntity implements ImportEntity {
    * @since Mar 2, 2015
    */
   @AssistedInject
-  StringEntity(Logger log, @Assisted Repository repository, @Assisted Path path, @Assisted String content) {
-    this(log, repository, path, () -> content);
+  StringEntity(Logger log, 
+      @Assisted ImportType fileType, @Assisted Repository repository, 
+      @Assisted Path path, @Assisted String content) {
+    this.log = log;
+    
+    // params
+    checkNotNull(content);
+    this.content = () -> content;
+    this.repository = checkNotNull(repository);
+    this.path = checkNotNull(path);
+    this.fileType = checkNotNull(fileType);
   }
 
   @Override
@@ -71,5 +85,10 @@ final class StringEntity implements ImportEntity {
   @Override
   public String get() {
     return content.get();
+  }
+  
+  @Override
+  public ImportType getImportType() {
+    return fileType;
   }
 }
