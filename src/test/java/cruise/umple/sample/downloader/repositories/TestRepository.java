@@ -21,6 +21,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
+import cruise.umple.sample.downloader.DiagramType;
 import cruise.umple.sample.downloader.ImportType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.entities.ImportEntity;
@@ -112,8 +113,8 @@ public class TestRepository implements Repository {
    * @see cruise.umple.sample.downloader.Repository#getFileType()
    */
   @Override
-  public ImportType getImportType() {
-    return ImportType.ECORE;
+  public DiagramType getDiagramType() {
+    return DiagramType.CLASS;
   }
 
   /* (non-Javadoc)

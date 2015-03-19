@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -33,6 +34,10 @@ public abstract class Consistents {
   
   @Inject
   private static ConsistentsFactory CONSISTENTS_FACTORY;
+  
+  @SuppressWarnings("unused")
+  @Inject
+  private static Logger logger;
   
   private static final SimpleModule jsonModule;
   static {
@@ -64,20 +69,20 @@ public abstract class Consistents {
    */
   public static ImportRepositorySet buildImportRepositorySet(final Path outputFolder, 
                                                              final List<ImportRuntimeData> allData) {
+    
     final Multimap<Repository, ImportRuntimeData> dataByRepo = Multimaps.index(allData, 
                                                                                ImportRuntimeData::getRepository);
     
-    final ConsistentsBuilder cbld = CONSISTENTS_FACTORY.create(outputFolder.toAbsolutePath().toString());
+    final ConsistentsBuilder cbld = CONSISTENTS_FACTORY.create(outputFolder.toAbsolutePath().normalize().toString());
     dataByRepo.asMap().entrySet().forEach(entry -> {
         final Repository key = entry.getKey();
         final ConsistentRepositoryBuilder repoBld = cbld.withRepository(key);
-        final Path repoPath = outputFolder.resolve("./" + key.getName()).normalize();
         entry.getValue().forEach(data -> {
-          final String outpath = repoPath.relativize(data.getOutputPath()).normalize().toString();
+          final Path outpath = data.getOutputPath().getFileName();
           if (data.isSuccessful()) {
-            repoBld.addSuccessFile(outpath, data.getImportType());
+            repoBld.addSuccessFile(outpath.toString(), data.getImportType());
           } else {
-            repoBld.addFailedFile(outpath, data.getImportType(), 
+            repoBld.addFailedFile(outpath.toString(), data.getImportType(), 
                 Throwables.getStackTraceAsString(data.getFailure().get()));
           }
         });
@@ -153,6 +158,7 @@ public abstract class Consistents {
       gen.writeStringField("path", value.getPath());
       gen.writeStringField("description", value.getDescription());
       gen.writeStringField("name", value.getName());
+      gen.writeStringField("diagramType", value.getDiagramType().getType());
       
       gen.writeArrayFieldStart("files");
       final JsonSerializer<Object> fileSrlzr = serializers.findValueSerializer(ImportFile.class);

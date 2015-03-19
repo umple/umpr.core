@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
+import cruise.umple.sample.downloader.DiagramType;
 import cruise.umple.sample.downloader.ImportType;
 
 /**
@@ -28,11 +29,12 @@ public class ConsistentRepositoryBuilder {
       @Assisted final ConsistentsBuilder parent, 
       @Assisted("name") final String name, 
       @Assisted("description") final String description,
+      @Assisted final DiagramType diagramType,
       @Assisted final ImportRepositorySet repSet) {
     this.log = log;
     
     this.importRepos = new ImportRepository(checkNotNull(name), checkNotNull(description), checkNotNull(name), 
-        checkNotNull(repSet));
+        checkNotNull(diagramType), checkNotNull(repSet));
     this.parent = checkNotNull(parent);
   }
   

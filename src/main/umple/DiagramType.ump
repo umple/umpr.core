@@ -1,0 +1,25 @@
+namespace cruise.umple.sample.downloader;
+
+/**
+ * ImportType is a "enumeration" of information for what type of 
+ * file was imported. 
+ * 
+ * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
+ * @since 12 Mar 2015
+ */
+class DiagramType {
+
+  const DiagramType STATE = new DiagramType("state");
+  
+  // http://yuml.me/
+  const DiagramType STRUCTURE = new DiagramType("structure");
+  
+  // http://en.wikipedia.org/wiki/SCXML
+  const DiagramType CLASS = new DiagramType("class");
+    
+  /** 
+   * The type of diagram.
+   */ 
+  immutable String type;  
+  
+}

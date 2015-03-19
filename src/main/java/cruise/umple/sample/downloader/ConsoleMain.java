@@ -130,7 +130,7 @@ public class ConsoleMain {
         }
         
         List<ImportRuntimeData> allData = urls.parallel()
-            .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr.getRepository().getImportType(),
+            .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr.getImportType(),
                                              tr, tr.getRepository()))                         
             .map(data -> {
               try {

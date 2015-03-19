@@ -14,6 +14,7 @@ import org.jsoup.select.Elements;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import cruise.umple.sample.downloader.DiagramType;
 import cruise.umple.sample.downloader.DocumentFactory;
 import cruise.umple.sample.downloader.ImportType;
 import cruise.umple.sample.downloader.Repository;
@@ -60,8 +61,8 @@ class AtlanZooRepository implements Repository {
     }
 
     @Override
-    public ImportType getImportType() {
-        return ImportType.ECORE;
+    public DiagramType getDiagramType() {
+        return DiagramType.CLASS;
     }
 
     @Override
@@ -85,7 +86,7 @@ class AtlanZooRepository implements Repository {
                         throw new IllegalArgumentException(mue);
                     }
                 })
-                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), getImportType(), url))
+                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), ImportType.ECORE, url))
                 .collect(Collectors.toList());
     }
 

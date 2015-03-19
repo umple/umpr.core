@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.jayway.jsonassert.JsonAssert;
 import com.jayway.jsonassert.JsonAsserter;
 
+import cruise.umple.sample.downloader.DiagramType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.repositories.TestRepository;
 import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
@@ -62,6 +63,8 @@ public class ConsistentsTest {
     
     JsonAssert.with(json)
       .assertEquals("$.repositories[0].path", TestRepository.TEST_NAME).and()
+      .assertEquals("$.repositories[0].description", TestRepository.DESCRIPTION).and()
+      .assertEquals("$.repositories[0].diagramType", DiagramType.CLASS.getType()).and()
       .assertEquals("$.repositories[0].files", Collections.<ImportFile>emptyList()); 
   }
   

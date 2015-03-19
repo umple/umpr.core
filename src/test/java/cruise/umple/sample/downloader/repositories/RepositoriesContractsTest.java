@@ -71,7 +71,7 @@ public class RepositoriesContractsTest {
     @Test
     public void checkFileType() {
       for (Repository r : allRepositories) {
-        assertNotNull(r.getImportType(), "Repository, " + r.getName() + ", has a null FileType.");
+        assertNotNull(r.getDiagramType(), "Repository, " + r.getName() + ", has a null DiagramType.");
       }
     }
     

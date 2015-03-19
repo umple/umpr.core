@@ -21,11 +21,11 @@ class ImportType {
   /** 
    * The file type of an import, i.e. the extension. 
    */ 
-  String fileType;  
+  immutable String fileType;  
   
   /**
    * Longform description of the type. 
    */
-  String name;
+  immutable String name;
   
 }
