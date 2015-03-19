@@ -32,6 +32,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import cruise.umple.compiler.EcoreImportHandler;
+import cruise.umple.compiler.UmpleImportHandler;
 import cruise.umple.compiler.UmpleImportModel;
 import cruise.umple.sample.downloader.consistent.Consistents;
 import cruise.umple.sample.downloader.consistent.ImportRepositorySet;
@@ -130,7 +131,7 @@ public class ConsoleMain {
         
         List<ImportRuntimeData> allData = urls.parallel()
             .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr.getRepository().getImportType(),
-                                             tr, tr.getRepository()))
+                                             tr, tr.getRepository()))                         
             .map(data -> {
               try {
                 data.setInputContent(data.getInputFunction().get());
@@ -145,7 +146,7 @@ public class ConsoleMain {
                 data.getInputContent().ifPresent(content -> {
                   data.getOutputPath().getParent().toFile().mkdir();
 
-                  EcoreImportHandler handler = new EcoreImportHandler();
+                  UmpleImportHandler handler = new EcoreImportHandler();
                   UmpleImportModel model;
 
                   logger.fine("Importing for " + data.getOutputPath());
