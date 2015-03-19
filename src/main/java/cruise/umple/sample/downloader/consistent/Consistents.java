@@ -85,7 +85,7 @@ public abstract class Consistents {
             repoBld.addSuccessFile(outpath.toString(), data.getImportType());
           } else {
             repoBld.addFailedFile(outpath.toString(), data.getImportType(), 
-                Throwables.getStackTraceAsString(data.getFailure().get()));
+                data.getFailure().get().getMessage());
           }
         });
       });
@@ -194,7 +194,10 @@ public abstract class Consistents {
       gen.writeStringField("path", value.getPath());
       gen.writeStringField("type", value.getImportType().getName());
       gen.writeBooleanField("successful", value.getSuccessful());
-      gen.writeStringField("message", value.getMessage());
+      
+      if (!Strings.isNullOrEmpty(value.getMessage())) {
+        gen.writeStringField("message", value.getMessage());
+      }
       
       gen.writeEndObject();
     }

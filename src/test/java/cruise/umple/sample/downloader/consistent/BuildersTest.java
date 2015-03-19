@@ -1,6 +1,7 @@
 package cruise.umple.sample.downloader.consistent;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.nio.file.Paths;
@@ -12,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -63,7 +65,7 @@ public class BuildersTest {
           e.get();
           rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
         } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), Throwables.getStackTraceAsString(ex));
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), Throwables.getRootCause(ex).toString());
         }
       });
     });
@@ -81,9 +83,9 @@ public class BuildersTest {
         assertEquals(f.getImportType(), ImportType.ECORE);
         
         if (f.isSuccessful()) {
-          assertEquals(f.getMessage(), "");
+          assertTrue(Strings.isNullOrEmpty(f.getMessage()), "Message was not empty when successful.");
         } else {
-          assertTrue(f.getMessage().contains("RESOURCE_FAILURE"), "Intentional fail was not found.");
+          assertFalse(Strings.isNullOrEmpty(f.getMessage()), "Message was empty when failed.");
           counter.incrementAndGet();
         }
       });

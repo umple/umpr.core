@@ -14,6 +14,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import cruise.umple.sample.downloader.repositories.TestRepository;
 import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
 
 /**
@@ -78,10 +79,9 @@ public class ConsoleMainTest {
      */
     @Test
     public void testRepositories() {
-        cfg.limit = 3; // get all of them
         Set<?> data = main.run(cfg);
 
-        Assert.assertEquals(data.size(), cfg.limit.longValue(),
+        Assert.assertEquals(data.size(), TestRepository.ECORE_FILES_SET.size(),
                 "Failed to import properly.");
     }
 

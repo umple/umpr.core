@@ -7,6 +7,12 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.base.Throwables;
+
+import cruise.umple.compiler.UmpleFile;
+
 /**
  * Stores data throughout the process
  * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
@@ -16,6 +22,8 @@ public class ImportRuntimeData {
   private final Path outputFile;
   private final ImportType importType;
   private Optional<String> umpleContent = Optional.empty();
+  
+  private Optional<UmpleFile> umpleFile = Optional.empty();
   
   private final Supplier<String> inputFunction;
   private Optional<String> inputContent = Optional.empty();
@@ -75,7 +83,15 @@ public class ImportRuntimeData {
   public Optional<String> getUmpleContent() {
     return umpleContent;
   }
-
+  
+  public void setUmpleFile(UmpleFile file) {
+    this.umpleFile = Optional.of(file);
+  }
+  
+  public Optional<UmpleFile> getUmpleFile() {
+    return umpleFile;
+  }
+  
   public void setUmpleContent(String umpleContent) {
     this.umpleContent = Optional.of(umpleContent);
   }
@@ -86,6 +102,20 @@ public class ImportRuntimeData {
    */
   public ImportType getImportType() {
     return importType;
+  }
+  
+  @Override
+  public String toString() {
+    ToStringHelper helper = MoreObjects.toStringHelper(getClass())
+        .add("importType", importType)
+        .add("repository", repository)
+        .add("outputFile", outputFile.normalize())
+        .add("successful", !failure.isPresent());
+    if (failure.isPresent()) {
+      helper.add("failureReason", Throwables.getRootCause(failure.get()));
+    }
+    
+    return helper.toString();
   }
 
   

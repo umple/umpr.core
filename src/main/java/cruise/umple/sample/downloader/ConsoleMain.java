@@ -1,11 +1,9 @@
 package cruise.umple.sample.downloader;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -31,8 +29,10 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import cruise.umple.compiler.EcoreImportHandler;
+import cruise.umple.compiler.UmpleFile;
 import cruise.umple.compiler.UmpleImportHandler;
 import cruise.umple.compiler.UmpleImportModel;
+import cruise.umple.compiler.UmpleModel;
 import cruise.umple.sample.downloader.consistent.Consistents;
 import cruise.umple.sample.downloader.consistent.ImportRepositorySet;
 import cruise.umple.sample.downloader.entities.ImportEntity;
@@ -128,6 +128,7 @@ public class ConsoleMain {
             urls = urls.limit(cfg.limit);
         }
         
+        // TODO Code-smell, this pipeline should be broken down
         final Set<ImportRuntimeData> allData = urls.parallel()
             .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr.getImportType(),
                                              tr, tr.getRepository()))                         
@@ -146,11 +147,10 @@ public class ConsoleMain {
                   data.getOutputPath().getParent().toFile().mkdir();
 
                   UmpleImportHandler handler = new EcoreImportHandler();
-                  UmpleImportModel model;
-
+                  
                   logger.fine("Importing for " + data.getOutputPath());
                   try (InputStream in = IOUtils.toInputStream(content, Charsets.UTF_8)) {
-                    model = handler.readDataFromXML(in);
+                    UmpleImportModel model = handler.readDataFromXML(in);
                     if (handler.isSuccessful()) {
                       data.setUmpleContent(model.generateUmple());
                     } else {
@@ -165,34 +165,40 @@ public class ConsoleMain {
                 return data;
             })
             .map(data -> {
-                data.getUmpleContent().ifPresent(umple -> {
-                    try {
-                        FileUtils.write(new File(data.getOutputPath().toString()), umple);
-                    } catch (IOException ioe) {
-                        throw new IllegalStateException(ioe);
-                    }
-                });
-
-                // Log any failures
-                data.getFailure().ifPresent(e -> {
-                  logger.fine(() -> {
-                    // simple lambda supplier of the string for the stack trace
-                    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                         PrintStream ps = new PrintStream(baos)) {
-                      // write the messages to the print stream, then convert it to string and log it
-                      ps.printf("Failed to parse %s:\n", data.getInputFunction());
-                      e.printStackTrace(ps);
-                      return baos.toString(Charsets.UTF_8.name());  
-                    } catch (IOException ioe) {
-                      // this should *never* happen, none of these operations are on the file system and the charset 
-                      // chosen should be universally supported.
-                      throw new IllegalStateException(ioe);
-                    }
-                  });
-                });
+              data.getUmpleContent().ifPresent(umple -> {
+                try {
+                  final File file = new File(data.getOutputPath().toString());
+                  FileUtils.write(file, umple);
+                  
+                  data.setUmpleFile(new UmpleFile(file));
+                } catch (Exception e) {
+                  data.setFailure(e);
+                }
+              });
+              
+              return data;
+            })
+            .map(data -> {
+              
+              data.getUmpleFile().ifPresent((ufile) -> {
+                final UmpleModel model = new UmpleModel(data.getUmpleFile().get());
+                model.setShouldGenerate(false);
+                try {
+                  model.run();
+                } catch (Exception e) {
+                  data.setFailure(e);
+                }
+              });
                 
-                return data;
-            }).collect(Collectors.toSet());
+              return data;
+            })
+            .peek((data) -> {
+              // Log any failures if they exist
+              data.getFailure().ifPresent(e -> {
+                logger.fine("Failed to parse " + data.getInputFunction() + ":\n" + Throwables.getStackTraceAsString(e));
+              });
+            })
+            .collect(Collectors.toSet());
         
         logger.info("Saved Umple files to: " + cfg.outputFolder.getPath());
         
@@ -212,6 +218,6 @@ public class ConsoleMain {
           throw Throwables.propagate(e);
         }
         
-        return allData;
+        return ImmutableSet.copyOf(allData);
     }
 }

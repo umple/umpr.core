@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -20,6 +21,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import cruise.umple.sample.downloader.DiagramType;
 import cruise.umple.sample.downloader.ImportType;
@@ -35,6 +37,7 @@ import cruise.umple.sample.downloader.entities.ImportEntityFactory;
  *
  * @since 11 Mar 2015
  */
+@Singleton
 public class TestRepository implements Repository {
   
   public static final String TEST_NAME = "TestRespository-ECore";
@@ -50,6 +53,7 @@ public class TestRepository implements Repository {
       .add("ocl-operations.ecore")
       .add("sharengo.ecore")
       .add("intentional-failure.ecore")
+      .add("adelfe.model-failure.ecore")
       .build();
   
   public static final Set<String> ECORE_FILES_SET = ImmutableSet.copyOf(ECORE_FILES);
@@ -131,6 +135,11 @@ public class TestRepository implements Repository {
   @Override
   public boolean isAccessible() {
     return true;
+  }
+  
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(getClass()).toString();
   }
 
 }
