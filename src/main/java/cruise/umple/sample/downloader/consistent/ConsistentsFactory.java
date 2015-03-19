@@ -1,5 +1,7 @@
 package cruise.umple.sample.downloader.consistent;
 
+import java.nio.file.Path;
+
 import com.google.inject.assistedinject.Assisted;
 
 import cruise.umple.sample.downloader.DiagramType;
@@ -18,7 +20,7 @@ public interface ConsistentsFactory {
    * @param rootPath Path that the factory lives at. 
    * @return New non-{@code null} instance
    */
-  public ConsistentsBuilder create(String rootPath);
+  public ConsistentsBuilder create(@Assisted("umple") final Path umplePath, @Assisted("src") final Path srcPath);
   
   /**
    * 

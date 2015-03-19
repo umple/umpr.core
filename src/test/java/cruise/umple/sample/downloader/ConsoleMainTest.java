@@ -2,7 +2,7 @@ package cruise.umple.sample.downloader;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.testng.Assert;
@@ -14,8 +14,6 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-import cruise.umple.sample.downloader.consistent.ImportRepository;
-import cruise.umple.sample.downloader.consistent.ImportRepositorySet;
 import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
 
 /**
@@ -67,7 +65,7 @@ public class ConsoleMainTest {
     public void limitConfig() {
         cfg.limit = 1;
 
-        List<ImportRuntimeData> data = main.run(cfg);
+        Set<?> data = main.run(cfg);
         int count = data.size();
 
         Assert.assertEquals(count, cfg.limit.intValue(), "Did not limit files to " + cfg.limit);
@@ -81,7 +79,7 @@ public class ConsoleMainTest {
     @Test
     public void testRepositories() {
         cfg.limit = 3; // get all of them
-        List<?> data = main.run(cfg);
+        Set<?> data = main.run(cfg);
 
         Assert.assertEquals(data.size(), cfg.limit.longValue(),
                 "Failed to import properly.");

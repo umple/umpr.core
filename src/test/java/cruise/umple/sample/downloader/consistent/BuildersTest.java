@@ -3,6 +3,7 @@ package cruise.umple.sample.downloader.consistent;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.Set;
@@ -12,6 +13,7 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Throwables;
+import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import cruise.umple.sample.downloader.ImportType;
@@ -27,7 +29,7 @@ public class BuildersTest {
   
   @Inject
   public BuildersTest(ConsistentsFactory factory, Set<Repository> repos) {
-    bld = factory.create(".");
+    bld = factory.create(Paths.get("."), Files.createTempDir().toPath());
     this.repos = repos;
   }
   
@@ -77,6 +79,7 @@ public class BuildersTest {
         final String name = f.getPath();
         assertTrue(TestRepository.ECORE_FILES_SET.contains(name), "Unknown path found: " + name);
         assertEquals(f.getImportType(), ImportType.ECORE);
+        
         if (f.isSuccessful()) {
           assertEquals(f.getMessage(), "");
         } else {

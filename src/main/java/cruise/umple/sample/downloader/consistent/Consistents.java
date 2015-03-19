@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -67,13 +68,14 @@ public abstract class Consistents {
    * @param allData {@link List} of {@link ImportRuntimeData} to map into new the consistent data structures. 
    * @return Non-{@code null} instance
    */
-  public static ImportRepositorySet buildImportRepositorySet(final Path outputFolder, 
-                                                             final List<ImportRuntimeData> allData) {
+  public static ImportRepositorySet buildImportRepositorySet(final Path outputFolder,
+                                                             final Path srcFolder, 
+                                                             final Iterable<? extends ImportRuntimeData> allData) {
     
-    final Multimap<Repository, ImportRuntimeData> dataByRepo = Multimaps.index(allData, 
-                                                                               ImportRuntimeData::getRepository);
+    final Multimap<Repository, ? extends ImportRuntimeData> dataByRepo = Multimaps.index(allData, 
+                                                                                         ImportRuntimeData::getRepository);
     
-    final ConsistentsBuilder cbld = CONSISTENTS_FACTORY.create(outputFolder.toAbsolutePath().normalize().toString());
+    final ConsistentsBuilder cbld = CONSISTENTS_FACTORY.create(outputFolder, srcFolder);
     dataByRepo.asMap().entrySet().forEach(entry -> {
         final Repository key = entry.getKey();
         final ConsistentRepositoryBuilder repoBld = cbld.withRepository(key);
@@ -128,8 +130,11 @@ public abstract class Consistents {
       gen.writeNumberField("date", value.getDate().getTime());
       gen.writeNumberField("time", value.getTime().getTime());
       
-      gen.writeStringField("rootPath", value.getRootPath());
-      
+      gen.writeStringField("umple", value.getUmplePath());
+      if (!Strings.isNullOrEmpty(value.getSrcPath())) {
+        gen.writeStringField("src", value.getSrcPath());
+      }
+           
       gen.writeArrayFieldStart("repositories");
       final JsonSerializer<Object> repoSrlzr = serializers.findValueSerializer(ImportRepository.class);
       for (ImportRepository r: value.getRepositories()) {

@@ -30,7 +30,8 @@ class ImportRepositorySet {
   immutable Date date;
   immutable Time time;
   
-  immutable String rootPath;
+  immutable String umplePath;
+  defaulted String srcPath = null;
   
   1 -- * ImportRepository repositories;
 

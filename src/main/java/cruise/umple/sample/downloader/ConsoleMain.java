@@ -2,7 +2,6 @@ package cruise.umple.sample.downloader;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -101,14 +100,14 @@ public class ConsoleMain {
     }
  
     /**
-     * Run the main console function which produces two lists of {@link ImportRuntimeData} constructs, pre-filtered into successful
-     * and unsuccessful. 
+     * Run the main console function which produces a {@link Set} of {@link ImportRuntimeData} instances based on the
+     * configuration. 
+     * 
      * @param cfg Configuration data
-     * @return Two lists, first list is successful data, second is unsuccessful. Both lists are non-null, possibly empty
-     *    and immutable. 
+     * @return Non-{@code null}, possibly empty {@link Set} of {@link ImportRuntimeData}. 
      * @since Feb 25, 2015
      */
-    public List<ImportRuntimeData> run(final Config cfg) {
+    public Set<ImportRuntimeData> run(final Config cfg) {
 
         cfg.outputFolder.mkdirs();
         cfg.importFileFolder.mkdirs();
@@ -129,7 +128,7 @@ public class ConsoleMain {
             urls = urls.limit(cfg.limit);
         }
         
-        List<ImportRuntimeData> allData = urls.parallel()
+        final Set<ImportRuntimeData> allData = urls.parallel()
             .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr.getImportType(),
                                              tr, tr.getRepository()))                         
             .map(data -> {
@@ -193,11 +192,12 @@ public class ConsoleMain {
                 });
                 
                 return data;
-            }).collect(Collectors.toList());
+            }).collect(Collectors.toSet());
         
         logger.info("Saved Umple files to: " + cfg.outputFolder.getPath());
         
-        final ImportRepositorySet set = Consistents.buildImportRepositorySet(cfg.outputFolder.toPath(), allData);
+        final ImportRepositorySet set = Consistents.buildImportRepositorySet(cfg.outputFolder.toPath(), 
+            cfg.importFileFolder.toPath(), allData);
 
         final String json = Consistents.toJson(set);
         

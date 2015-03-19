@@ -1,6 +1,8 @@
 package cruise.umple.sample.downloader.consistent;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Set;
 
@@ -37,8 +39,8 @@ public class ConsistentsTest {
   }
   
   @BeforeMethod
-  public void setup() {
-    bld = factory.create(".");
+  public void setup() throws IOException {
+    bld = factory.create(Paths.get("."), Files.createTempDirectory("TEST_"));
   }
  
   @Test
@@ -50,7 +52,8 @@ public class ConsistentsTest {
     JsonAssert.with(json)
       .assertEquals("$.date", fromBld.getDate().getTime()).and()
       .assertEquals("$.time", fromBld.getTime().getTime()).and()   
-      .assertEquals("$.rootPath", fromBld.getRootPath()).and()
+      .assertEquals("$.umple", fromBld.getUmplePath()).and() 
+      .assertEquals("$.src", fromBld.getSrcPath()).and()
       .assertEquals("$.repositories", Collections.<ImportRepository>emptyList());
   }
   
@@ -91,10 +94,11 @@ public class ConsistentsTest {
       
       for (int i = 0; i < r.getFiles().size(); ++i) {
         final ImportFile file = r.getFile(i);
-        jassert.assertEquals(String.format(START, i) + ".path", file.getPath()).and()
-          .assertEquals(String.format(START, i) + ".type", file.getImportType().getName()).and()
-          .assertEquals(String.format(START, i) + ".successful", file.isSuccessful()).and()
-          .assertEquals(String.format(START, i) + ".message", file.getMessage());
+        final String path = String.format(START, i);
+        jassert.assertEquals(path + ".path", file.getPath()).and()
+          .assertEquals(path + ".type", file.getImportType().getName()).and()
+          .assertEquals(path + ".successful", file.isSuccessful()).and()
+          .assertEquals(path + ".message", file.getMessage());
       }
     });
     
