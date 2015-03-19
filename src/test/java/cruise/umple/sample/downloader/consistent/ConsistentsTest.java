@@ -12,7 +12,6 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.jayway.jsonassert.JsonAssert;
 import com.jayway.jsonassert.JsonAsserter;
@@ -80,7 +79,7 @@ public class ConsistentsTest {
           e.get();
           rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
         } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), Throwables.getStackTraceAsString(ex));
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ex.getMessage());
         }
       });
     });
@@ -97,8 +96,13 @@ public class ConsistentsTest {
         final String path = String.format(START, i);
         jassert.assertEquals(path + ".path", file.getPath()).and()
           .assertEquals(path + ".type", file.getImportType().getName()).and()
-          .assertEquals(path + ".successful", file.isSuccessful()).and()
-          .assertEquals(path + ".message", file.getMessage());
+          .assertEquals(path + ".successful", file.isSuccessful());
+        if (file.isSuccessful()) {
+          jassert.assertNotDefined(path + ".message");
+        } else {
+          jassert.assertEquals(path + ".message", file.getMessage());
+        }
+          
       }
     });
     

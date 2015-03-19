@@ -13,12 +13,10 @@ import java.util.function.Supplier;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -62,7 +60,7 @@ public class TestRepository implements Repository {
   
   static {
     
-    Map<String, Supplier<String>> content = Maps.asMap(Sets.newHashSet(ECORE_FILES), path -> 
+    Map<String, Supplier<String>> content = Maps.asMap(ECORE_FILES_SET, path -> 
       () -> {
           try {
             URL url = Resources.getResource("repositories/" + path);
@@ -80,7 +78,7 @@ public class TestRepository implements Repository {
       try {
         return val.get();
       } catch (IllegalStateException ise) {
-        return Throwables.getStackTraceAsString(ise);
+        return ise.getMessage();
       }
     });
   }

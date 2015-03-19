@@ -38,7 +38,7 @@ public class ConsoleMainTest {
     @BeforeMethod
     public void beforeMethod() {
         cfg = new ConsoleMain.Config();
-        cfg.limit = 3; // for speed
+        cfg.limit = -1; // for speed
         cfg.outputFolder = Files.createTempDir();
         cfg.outputFolder.deleteOnExit();
 
@@ -64,7 +64,7 @@ public class ConsoleMainTest {
      */
     @Test
     public void limitConfig() {
-        cfg.limit = 1;
+        cfg.limit = 3;
 
         Set<?> data = main.run(cfg);
         int count = data.size();

@@ -131,7 +131,7 @@ public class ConsoleMain {
         // TODO Code-smell, this pipeline should be broken down
         final Set<ImportRuntimeData> allData = urls.parallel()
             .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr.getImportType(),
-                                             tr, tr.getRepository()))                         
+                                             tr, tr.getRepository()))  
             .map(data -> {
               try {
                 data.setInputContent(data.getInputFunction().get());
@@ -181,7 +181,7 @@ public class ConsoleMain {
             .map(data -> {
               
               data.getUmpleFile().ifPresent((ufile) -> {
-                final UmpleModel model = new UmpleModel(data.getUmpleFile().get());
+                final UmpleModel model = new UmpleModel(ufile);
                 model.setShouldGenerate(false);
                 try {
                   model.run();

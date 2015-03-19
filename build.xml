@@ -4,10 +4,6 @@
   <taskdef name="umplec" classname="cruise.umple.util.UmplecAntTask" classpath="${umple.core.jar}" />
 
   <property file="build.properties" />
-  <!-- Uncomment the following property if no tests compilation is needed -->
-  <!-- 
-  <property name="skip.tests" value="true"/>
-   -->
 
   <exec executable="git" outputproperty="git.revision">
     <arg value="describe" />
@@ -70,25 +66,22 @@
        dest="${ivy.jar.file}" usetimestamp="true" />
   </target>
 
-  <target name="resolve" depends="install-ivy" description="--> retrieve dependencies with ivy">
+  <target name="ivy-resolve" depends="install-ivy" description="--> retrieve dependencies with ivy">
     <ivy:resolve />
     <ivy:retrieve sync="true" />
-  </target>
-  
-  <target name="ivy-paths" description="Update ivy class paths">
-    <ivy:cachepath pathid="build.path" conf="build" />
-    <ivy:cachepath pathid="test.path" conf="test" />
-
-    <path id="ivylib.path.id">
-      <fileset dir="${ivy.lib.dir}" />
-    </path>
+  	
+  	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+  	  <classpath>
+  	    <pathelement location="${ivy.jar.dir}/ant-contrib-0.3.jar"/>
+  	  </classpath>
+  	</taskdef>
   </target>
 
   <target name="umpleGen" depends="init" description="Run umple against models shared between web interface">
     <umplec src="${src.dir.main.umple}/Master.ump" dest="${src.dir.gen.umple}" generate="Java" />
   </target>
   
-  <target name="compile.quick" depends="ivy-paths" description="Run compilation of library code, no dependencies are run.">
+  <target name="compile.quick" depends="init" description="Run compilation of library code, no dependencies are run.">
     <echo message="Compling umple sources ${src.dir.gen.umple} -> ${build.dir.main.compile}" />
     <javac srcdir="${src.dir.gen.umple}" destdir="${build.dir.main.compile}" includeantruntime="true">
       <classpath refid="build.path" />
@@ -110,7 +103,7 @@
     </copy> -->
   </target>
 
-  <target name="compile" depends="init, umpleGen, compile.quick" description="Compile core code">
+  <target name="compile" depends="init, ivy-resolve, umpleGen, compile.quick" description="Compile core code">
     
   </target>
   
@@ -139,7 +132,11 @@
     </taskdef>
 
     <echo>Running tests -> ${build.dir.test.report}</echo>
-    <testng workingDir="${build.dir.test.report}" outputdir="${build.dir.test.report}" haltonfailure="on" groups="${test.groups}" excludedgroups="${test.excludegroups}">
+    <testng workingDir="${build.dir.test.report}"
+            outputdir="${build.dir.test.report}" 
+            failureProperty="testsFailed" 
+    	      groups="${test.groups}" 
+    	      excludedgroups="${test.excludegroups}">
       <classpath>
         <pathelement location="${build.dir.main.compile}" />
         <pathelement location="${build.dir.test.compile}" />
@@ -148,11 +145,20 @@
       </classpath>
       <classfileset dir="${build.dir.test.compile}" includes="**/*.class" />
     </testng>
+  	
+  	<if>
+  		<isset property="testsFailed"/>
+  		<then>
+  			<loadfile property="failedTestCases"
+  			      srcFile="${build.dir.test.report}/testng-failed.xml" />
+  			<echo message="${failedTestCases}" />
+  		</then>
+		</if>
 
   </target>
 
   <!-- Group all dependencies into a big dependency-all.jar -->
-  <target name="package.dependencies" depends="resolve">
+  <target name="package.dependencies" depends="init, ivy-resolve">
     <mkdir dir="${dist.dir}" />
 
     <jar jarfile="${dist.dependency.jar}">
@@ -195,12 +201,20 @@
     <delete dir="${ivy.lib.dir}" />
   </target>
 
-  <target name="init" description="Build initialization" depends="install-ivy, resolve, ivy-paths">
+  <target name="init" description="Build initialization" depends="install-ivy">
     <mkdir dir="${build.dir.main}" />
     <mkdir dir="${build.dir.main.compile}" />
 
     <mkdir dir="${build.dir.test}" />
     <mkdir dir="${build.dir.test.compile}" />
+  	
+  	<!-- Setup the ivy class paths -->
+  	<ivy:cachepath pathid="build.path" conf="build" />
+    <ivy:cachepath pathid="test.path" conf="test" />
+
+    <path id="ivylib.path.id">
+      <fileset dir="${ivy.lib.dir}" />
+    </path>
   </target>
 
   <target name="build.modules" depends="clean, init, compile" description="build all modules" />
