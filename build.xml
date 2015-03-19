@@ -15,26 +15,26 @@
   </exec>
   <property name="version" value="0.0.0-${git.revision}" />
 
-  <property name="build.dir" value="./bin" />
+  <property name="build.dir" value="bin" />
   <property name="build.dir.main" value="${build.dir}/main" />
-  <property name="build.dir.main.compile" value="${build.dir.main}/" />
+  <property name="build.dir.main.compile" value="${build.dir.main}" />
   <property name="build.dir.main.resources" value="${build.dir.main.compile}" />
 
   <!-- Tests -->
   <property name="test.groups" value="" />
   <property name="test.excludegroups" value="long-runtime" />
-  <property name="build.dir.test" value="./bin/test" />
-  <property name="build.dir.test.report" value="./test-report" />
+  <property name="build.dir.test" value="bin/test" />
+  <property name="build.dir.test.report" value="test-report" />
   <property name="build.dir.test.compile" value="${build.dir.test}" />
   <property name="build.dir.test.resources" value="${build.dir.test.compile}" />
 
   <!-- src directories -->
-  <property name="src.dir" value="./src" />
+  <property name="src.dir" value="src" />
   <property name="src.dir.main" value="${src.dir}/main" />
   <property name="src.dir.main.java" value="${src.dir.main}/java" />
   <property name="src.dir.main.resources" value="${src.dir.main}/resources" />
   <property name="src.dir.main.umple" value="${src.dir.main}/umple" />
-  <property name="src.dir.gen" value="${src.dir}/gen/" />
+  <property name="src.dir.gen" value="${src.dir}/gen" />
   <property name="src.dir.gen.umple" value="${src.dir.gen}/umple" />
   <property name="src.dir.test" value="${src.dir}/test" />
   <property name="src.dir.test.java" value="${src.dir.test}/java" />
@@ -73,25 +73,30 @@
   <target name="resolve" depends="install-ivy" description="--> retrieve dependencies with ivy">
     <ivy:resolve />
     <ivy:retrieve sync="true" />
-    <ivy:cachepath pathid="build.path" conf="build" />
+  </target>
+	
+	<target name="ivy-paths" description="Update ivy class paths">
+		<ivy:cachepath pathid="build.path" conf="build" />
     <ivy:cachepath pathid="test.path" conf="test" />
 
     <path id="ivylib.path.id">
       <fileset dir="${ivy.lib.dir}" />
     </path>
-  </target>
+	</target>
 
   <target name="umpleGen" depends="init" description="Run umple against models shared between web interface">
     <umplec src="${src.dir.main.umple}/Master.ump" dest="${src.dir.gen.umple}" generate="Java" />
   </target>
-
-  <target name="compile" depends="init,umpleGen" description="Compile core code">
-    <javac srcdir="${src.dir.gen.umple}" destdir="${build.dir.main.compile}" includeantruntime="true">
+	
+	<target name="compile.quick" depends="ivy-paths" description="Run compilation of library code, no dependencies are run.">
+		<echo message="Compling umple sources ${src.dir.gen.umple} -> ${build.dir.main.compile}" />
+		<javac srcdir="${src.dir.gen.umple}" destdir="${build.dir.main.compile}" includeantruntime="true">
       <classpath refid="build.path" />
       <classpath path="${umple.core.jar}" />
       <exclude name="**/.git" />
     </javac>
 
+		<echo message="Compling core ${src.dir.main.java} -> ${build.dir.main.compile}" />
     <javac srcdir="${src.dir.main.java}" destdir="${build.dir.main.compile}" includeantruntime="true">
       <classpath refid="build.path" />
       <classpath path="${umple.core.jar}" />
@@ -103,10 +108,14 @@
         <fileset dir="${src.dir.resources}"
            includes="**/*.properties,**/*.ecore" /> 
     </copy> -->
-  </target>
+	</target>
 
-  <target name="test.compile" depends="init, compile" description="Compile test code">
-    <echo message="Compling test cases ${src.dir.test.java} -> ${build.dir.test.compile}" />
+  <target name="compile" depends="init, umpleGen, compile.quick" description="Compile core code">
+    
+  </target>
+	
+	<target name="test.compile.quick" depends="compile.quick" description="Only compile code, no dependencies.">
+		<echo message="Compling test cases ${src.dir.test.java} -> ${build.dir.test.compile}" />
     <javac srcdir="${src.dir.test.java}" destdir="${build.dir.test.compile}" includeantruntime="true">
       <classpath refid="test.path" />
       <classpath path="${umple.core.jar}" />
@@ -116,6 +125,10 @@
     <copy todir="${build.dir.test.resources}">
       <fileset dir="${src.dir.test.resources}" includes="**/*.xml,**/*.properties,**/*.html,**/*.ecore" />
     </copy>
+	</target>
+
+  <target name="test.compile" depends="init, compile, test.compile.quick" description="Compile test code">
+    
   </target>
 
   <target name="test" depends="test.compile" description="Run TestNG test cases">
@@ -182,7 +195,7 @@
     <delete dir="${ivy.lib.dir}" />
   </target>
 
-  <target name="init" description="Build initialization" depends="install-ivy, resolve">
+  <target name="init" description="Build initialization" depends="install-ivy, resolve, ivy-paths">
     <mkdir dir="${build.dir.main}" />
     <mkdir dir="${build.dir.main.compile}" />
 
