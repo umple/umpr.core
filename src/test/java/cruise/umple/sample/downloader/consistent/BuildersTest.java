@@ -10,6 +10,7 @@ import java.sql.Time;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -27,21 +28,29 @@ import cruise.umple.sample.downloader.util.MockModule;
 public class BuildersTest {
   
   private ConsistentsBuilder bld;
+  private final ConsistentsFactory factory;
   private final Set<Repository> repos;
   
   @Inject
   public BuildersTest(ConsistentsFactory factory, Set<Repository> repos) {
-    bld = factory.create(Paths.get("."), Files.createTempDir().toPath());
     this.repos = repos;
+    this.factory = factory;
+  }
+  
+  private long time;
+  
+  @BeforeMethod
+  public void setup() {
+    time = System.currentTimeMillis();
+    bld = factory.create(Paths.get("."), Files.createTempDir().toPath());
   }
   
   
   @SuppressWarnings("deprecation")
   @Test
   public void simpleNoRepositories() {
-    final long time = System.currentTimeMillis();
-    final Time now = new Time(time);
     final Date nowD = new Date(time);
+    final Time now = new Time(time);
     
     final ImportRepositorySet fromBld = bld.getRepositorySet();
     
@@ -50,8 +59,10 @@ public class BuildersTest {
     assertEquals(fromBld.getDate().getDay(), nowD.getDay());
     
     // THIS IS BAD, BUT UMPLE USES java.sql.Date INSTEAD OF java.util.Calendar or java.util.Duration
-    assertEquals(fromBld.getTime().getHours(), now.getHours());
-    assertEquals(fromBld.getTime().getMinutes(), now.getMinutes());
+    assertEquals(fromBld.getTime().getHours(), now.getHours(), 
+        "If this fails, re-run before raising issue -- hour may have rolled over");
+    assertEquals(fromBld.getTime().getMinutes(), now.getMinutes(), 
+        "If this fails, re-run before raising issue -- minute may have rolled over");
     
     assertEquals(fromBld.getRepositories().size(), 0);
   }

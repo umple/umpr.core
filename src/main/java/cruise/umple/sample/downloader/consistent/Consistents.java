@@ -78,7 +78,8 @@ public abstract class Consistents {
     dataByRepo.asMap().entrySet().forEach(entry -> {
         final Repository key = entry.getKey();
         final ConsistentRepositoryBuilder repoBld = cbld.withRepository(key);
-        entry.getValue().forEach(data -> {
+        
+        entry.getValue().forEach( data -> {
           final Path outpath = data.getOutputPath().getFileName();
           if (data.isSuccessful()) {
             repoBld.addSuccessFile(outpath.toString(), data.getImportType());
@@ -87,6 +88,8 @@ public abstract class Consistents {
                 data.getFailure().get().getMessage());
           }
         });
+        
+        repoBld.withCalculatedSuccessRate();
       });
     
     return cbld.getRepositorySet();
@@ -163,6 +166,8 @@ public abstract class Consistents {
       gen.writeStringField("description", value.getDescription());
       gen.writeStringField("name", value.getName());
       gen.writeStringField("diagramType", value.getDiagramType().getType());
+      gen.writeNumberField("successRate", value.getSuccessRate());
+      gen.writeNumberField("failRate", value.getFailRate());
       
       gen.writeArrayFieldStart("files");
       final JsonSerializer<Object> fileSrlzr = serializers.findValueSerializer(ImportFile.class);

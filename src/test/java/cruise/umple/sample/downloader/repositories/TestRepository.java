@@ -54,6 +54,8 @@ public class TestRepository implements Repository {
       .add("adelfe.model-failure.ecore")
       .build();
   
+  public static final double SUCCESS_RATE;
+  
   public static final Set<String> ECORE_FILES_SET = ImmutableSet.copyOf(ECORE_FILES);
   public static final Map<String, Supplier<String> > ECORE_MAP;
   public static final Map<String, String> ECORE_CONTENT;
@@ -81,6 +83,10 @@ public class TestRepository implements Repository {
         return ise.getMessage();
       }
     });
+    
+    long successes = ECORE_CONTENT.values().stream().filter(s -> { return !s.startsWith("RESOURCE_FAILURE"); }).count();
+    
+    SUCCESS_RATE = (1.0 * successes) / ECORE_CONTENT.values().size();
   }
   
   @Inject

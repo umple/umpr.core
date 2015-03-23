@@ -38,11 +38,24 @@ public class ConsistentRepositoryBuilder {
     this.parent = checkNotNull(parent);
   }
   
-  public ConsistentRepositoryBuilder withSuccessRate(final double successRate) {
-    this.importRepos.setSuccessRate(successRate);
+  /**
+   * Given the files within the current import repository, calculate the rate of successes. 
+   * 
+   * <strong>Warning: This will set the success rate to {@code NaN} if no files are set.</strong>
+   * @return {@code this}. 
+   */
+  public ConsistentRepositoryBuilder withCalculatedSuccessRate() {
+    final long scount = importRepos.getFiles().stream().filter(ImportFile::isSuccessful).count();
     
+    importRepos.setSuccessRate(Double.valueOf(scount) / importRepos.numberOfFiles());
+    
+    if (importRepos.numberOfFiles() == 0) {
+      log.warning("withCalculatedSuccessRate: Set successRate to NaN");
+    }
+  
     return this;
   }
+  
   
   /**
    * Add a file that was successfully imported.

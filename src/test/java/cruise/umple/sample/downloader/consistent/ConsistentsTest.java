@@ -67,6 +67,8 @@ public class ConsistentsTest {
       .assertEquals("$.repositories[0].path", TestRepository.TEST_NAME).and()
       .assertEquals("$.repositories[0].description", TestRepository.DESCRIPTION).and()
       .assertEquals("$.repositories[0].diagramType", DiagramType.CLASS.getType()).and()
+      .assertEquals("$.repositories[0].successRate", 1.0).and()
+      .assertEquals("$.repositories[0].failRate", 0.0).and()
       .assertEquals("$.repositories[0].files", Collections.<ImportFile>emptyList()); 
   }
   
@@ -74,6 +76,7 @@ public class ConsistentsTest {
   public void toJsonImportFile() {
     repos.forEach(r -> {
       final ConsistentRepositoryBuilder rbld = bld.withRepository(r);
+      
       r.getImports().forEach(e -> {
         try {
           e.get();
@@ -82,6 +85,8 @@ public class ConsistentsTest {
           rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ex.getMessage());
         }
       });
+      
+      rbld.withCalculatedSuccessRate();
     });
     
     final ImportRepositorySet fromBld = bld.getRepositorySet();

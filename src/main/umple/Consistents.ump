@@ -26,13 +26,13 @@ class ImportRepository {
   1 -- * ImportFile files;
   
   after setSuccessRate {
-    if (getFailRate() != (1.0 - getSuccessRate())) {
+    if (!Double.valueOf(getFailRate()).equals(1.0 - getSuccessRate())) {
       setFailRate(1.0 - getSuccessRate());
     }
   }
         
   after setFailRate {
-    if (getSuccessRate() != (1.0 - getFailRate())) {
+    if (!Double.valueOf(getSuccessRate()).equals(1.0 - getFailRate())) {
       setSuccessRate(1.0 - getFailRate());
     }
   }
