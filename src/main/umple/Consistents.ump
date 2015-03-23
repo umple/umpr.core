@@ -1,11 +1,11 @@
 namespace cruise.umple.sample.downloader.consistent;
 
 class ImportFile {
-  depend cruise.umple.sample.downloader.ImportType;
+  depend cruise.umple.compiler.UmpleImportType;
 
   immutable String path;
   
-  immutable ImportType importType;
+  immutable UmpleImportType importType;
   
   immutable Boolean successful;
   
@@ -13,15 +13,29 @@ class ImportFile {
 }
 
 class ImportRepository {
-  depend cruise.umple.sample.downloader.ImportType;
   depend cruise.umple.sample.downloader.DiagramType;
+  depend cruise.umple.compiler.UmpleImportType;
   
   immutable String name;
   immutable String description;
   immutable String path;
   immutable DiagramType diagramType;
+  defaulted Double successRate = 1.0;
+  defaulted Double failRate = 0.0;
   
   1 -- * ImportFile files;
+  
+  after setSuccessRate {
+    if (getFailRate() != (1.0 - getSuccessRate())) {
+      setFailRate(1.0 - getSuccessRate());
+    }
+  }
+        
+  after setFailRate {
+    if (getSuccessRate() != (1.0 - getFailRate())) {
+      setSuccessRate(1.0 - getFailRate());
+    }
+  }
 }
 
 class ImportRepositorySet {

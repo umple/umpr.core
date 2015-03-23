@@ -21,8 +21,8 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.sample.downloader.DiagramType;
-import cruise.umple.sample.downloader.ImportType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.entities.ImportEntity;
 import cruise.umple.sample.downloader.entities.ImportEntityFactory;
@@ -89,7 +89,7 @@ public class TestRepository implements Repository {
     ImmutableList.Builder<ImportEntity> bld = ImmutableList.builder();
     
     ECORE_MAP.entrySet().forEach(entry -> {
-      bld.add(factory.createStringEntity(this, Paths.get(entry.getKey()), ImportType.ECORE, entry.getValue()));
+      bld.add(factory.createStringEntity(this, Paths.get(entry.getKey()), UmpleImportType.ECORE, entry.getValue()));
     });
     
     entities = bld.build();

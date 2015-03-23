@@ -12,6 +12,7 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Throwables;
 
 import cruise.umple.compiler.UmpleFile;
+import cruise.umple.compiler.UmpleImportType;
 
 /**
  * Stores data throughout the process
@@ -20,7 +21,7 @@ import cruise.umple.compiler.UmpleFile;
  */
 public class ImportRuntimeData {
   private final Path outputFile;
-  private final ImportType importType;
+  private final UmpleImportType importType;
   private Optional<String> umpleContent = Optional.empty();
   
   private Optional<UmpleFile> umpleFile = Optional.empty();
@@ -39,7 +40,7 @@ public class ImportRuntimeData {
    * @param input
    * @param repository
    */
-  ImportRuntimeData(Path outputFolder, Path inputName, final ImportType fileType, Supplier<String> inputFunc, Repository repository) {        
+  ImportRuntimeData(Path outputFolder, Path inputName, final UmpleImportType fileType, Supplier<String> inputFunc, Repository repository) {        
     checkNotNull(inputName);
     this.outputFile = Paths.get(outputFolder.toAbsolutePath().toString(),
         repository.getName(), inputName.getFileName().toString() + ".ump");
@@ -100,7 +101,7 @@ public class ImportRuntimeData {
    * Get the associate file type. 
    * @return FileType string
    */
-  public ImportType getImportType() {
+  public UmpleImportType getImportType() {
     return importType;
   }
   

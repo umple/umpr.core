@@ -55,9 +55,7 @@ public class ConsoleMain {
                 "no guarentees to which repositories are used")
         Integer limit = -1;
 
-        Config() {
-
-        }
+        Config() { }
 
         @Override
         public String toString() {

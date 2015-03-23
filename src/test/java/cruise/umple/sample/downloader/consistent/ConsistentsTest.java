@@ -19,9 +19,9 @@ import com.jayway.jsonassert.JsonAsserter;
 import cruise.umple.sample.downloader.DiagramType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.repositories.TestRepository;
-import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
+import cruise.umple.sample.downloader.util.MockModule;
 
-@Guice(modules={MockDocumentFactoryModule.class})
+@Guice(modules={MockModule.class})
 @Test
 public class ConsistentsTest {
   

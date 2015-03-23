@@ -151,7 +151,7 @@
   		<then>
   			<loadfile property="failedTestCases"
   			      srcFile="${build.dir.test.report}/testng-failed.xml" />
-  			<echo message="${failedTestCases}" />
+  			<fail message="${failedTestCases}" />
   		</then>
 		</if>
 

@@ -14,31 +14,34 @@ import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 
+import cruise.umple.compiler.UmpleImportType;
+
 /**
  * @author kevin
  *
  */
-public abstract class ImportTypes {
+public abstract class UmpleImportTypes {
 
-  private ImportTypes() { 
+  private UmpleImportTypes() { 
     // Do not instantiate
   }
   
-  private static final Map<String, ImportType> ALL_TYPES;
+  private static final Map<String, UmpleImportType> ALL_TYPES;
+  // reflectively build up a map of all types
   static {
-    ImmutableMap.Builder<String, ImportType> allTypesBld = ImmutableMap.builder();
+    ImmutableMap.Builder<String, UmpleImportType> allTypesBld = ImmutableMap.builder();
     
     
-    List<Field> fields = Arrays.asList(ImportType.class.getFields());
+    List<Field> fields = Arrays.asList(UmpleImportType.class.getFields());
     fields.stream().filter(f -> {
       final int mods = f.getModifiers();
       
-      return f.getType() == ImportType.class && 
+      return f.getType() == UmpleImportType.class && 
           f.isAccessible() && 
           Modifier.isStatic(mods) && Modifier.isPublic(mods);
     }).forEach(f -> {
       try {
-        allTypesBld.put(f.getName(), (ImportType)f.get(null));
+        allTypesBld.put(f.getName(), (UmpleImportType)f.get(null));
       } catch (IllegalArgumentException | IllegalAccessException e) {
         // Neither exception should be thrown as the field is static and public
         Throwables.propagate(e);
@@ -49,19 +52,19 @@ public abstract class ImportTypes {
   }
   
   /**
-   * Gets the {@link ImportType} with {@code name}. 
-   * @param name The name of the {@link ImportType}, see {@link ImportType#getName()}.
-   * @return Non-{@code null} {@link ImportType}. 
+   * Gets the {@link UmpleImportType} with {@code name}. 
+   * @param name The name of the {@link UmpleImportType}, see {@link UmpleImportType#getName()}.
+   * @return Non-{@code null} {@link UmpleImportType}. 
    * @throws IllegalArgumentException if name is {@code null} or empty
    * @throws NoSuchElementException if name is not a valid identifier
    */
-  public static ImportType valueOf(final String name) {
+  public static UmpleImportType valueOf(final String name) {
     if (Strings.isNullOrEmpty(name)) {
       throw new IllegalArgumentException("name is null or empty.");
     }
     
     if (!ALL_TYPES.containsKey(name)) {
-      throw new NoSuchElementException("ImportType with name=" + name + " does not exist.");
+      throw new NoSuchElementException("UmpleImportType with name=" + name + " does not exist.");
     }
     
     return ALL_TYPES.get(name);

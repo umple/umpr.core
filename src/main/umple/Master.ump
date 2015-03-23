@@ -1,5 +1,4 @@
 
 use DiagramType.ump;
-use ImportType.ump;
 
 use Consistents.ump;

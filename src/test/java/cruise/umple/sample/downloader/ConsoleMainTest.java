@@ -15,12 +15,12 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import cruise.umple.sample.downloader.repositories.TestRepository;
-import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
+import cruise.umple.sample.downloader.util.MockModule;
 
 /**
  * Created by kevin on 15-02-23.
  */
-@Guice(modules={MockDocumentFactoryModule.class})
+@Guice(modules={MockModule.class})
 public class ConsoleMainTest {
 
     @Inject

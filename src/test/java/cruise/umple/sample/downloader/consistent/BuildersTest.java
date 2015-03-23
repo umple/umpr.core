@@ -18,12 +18,12 @@ import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
-import cruise.umple.sample.downloader.ImportType;
+import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.repositories.TestRepository;
-import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
+import cruise.umple.sample.downloader.util.MockModule;
 
-@Guice(modules=MockDocumentFactoryModule.class)
+@Guice(modules=MockModule.class)
 public class BuildersTest {
   
   private ConsistentsBuilder bld;
@@ -80,7 +80,7 @@ public class BuildersTest {
       repo.getFiles().forEach(f -> {
         final String name = f.getPath();
         assertTrue(TestRepository.ECORE_FILES_SET.contains(name), "Unknown path found: " + name);
-        assertEquals(f.getImportType(), ImportType.ECORE);
+        assertEquals(f.getImportType(), UmpleImportType.ECORE);
         
         if (f.isSuccessful()) {
           assertTrue(Strings.isNullOrEmpty(f.getMessage()), "Message was not empty when successful.");

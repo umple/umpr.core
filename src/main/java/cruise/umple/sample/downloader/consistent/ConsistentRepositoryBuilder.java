@@ -7,8 +7,8 @@ import java.util.logging.Logger;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
+import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.sample.downloader.DiagramType;
-import cruise.umple.sample.downloader.ImportType;
 
 /**
  * Builds an {@link ImportRepository} instance simply by removing some guess work. 
@@ -38,6 +38,12 @@ public class ConsistentRepositoryBuilder {
     this.parent = checkNotNull(parent);
   }
   
+  public ConsistentRepositoryBuilder withSuccessRate(final double successRate) {
+    this.importRepos.setSuccessRate(successRate);
+    
+    return this;
+  }
+  
   /**
    * Add a file that was successfully imported.
    * @param path Name of file, i.e. the path it will be stored at. 
@@ -48,7 +54,7 @@ public class ConsistentRepositoryBuilder {
    * 
    * @see #addFailedFile(String, String, String)
    */
-  public ConsistentRepositoryBuilder addSuccessFile(final String path, final ImportType fileType) {
+  public ConsistentRepositoryBuilder addSuccessFile(final String path, final UmpleImportType fileType) {
     log.finer("Adding successful file: path=" + path + ", type=" + fileType);
     
     new ImportFile(path, fileType, true, "", importRepos);
@@ -67,7 +73,8 @@ public class ConsistentRepositoryBuilder {
    * 
    * @see #addSuccessFile(String, String)
    */
-  public ConsistentRepositoryBuilder addFailedFile(final String path, final ImportType fileType, final String errorMessage) {
+  public ConsistentRepositoryBuilder addFailedFile(final String path, final UmpleImportType fileType, 
+      final String errorMessage) {
     log.finer("Adding failed file: path=" + path + ", type=" + fileType + ", error=" + errorMessage);
     
     new ImportFile(path, fileType, false, errorMessage, importRepos);

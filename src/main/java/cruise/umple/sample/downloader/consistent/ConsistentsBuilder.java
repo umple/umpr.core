@@ -48,7 +48,7 @@ public class ConsistentsBuilder {
     
     checkNotNull(umplePath);
 
-    final long now = System.currentTimeMillis();
+    final long now = System.currentTimeMillis(); 
     this.repositorySet = new ImportRepositorySet(new Date(now), new Time(now), PATH_TRANSFORM.apply(umplePath));
     this.repositorySet.setSrcPath(PATH_TRANSFORM.apply(srcPath));
     

@@ -7,19 +7,12 @@ namespace cruise.umple.sample.downloader;
  * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
  * @since 12 Mar 2015
  */
-class DiagramType {
+class Diagram {
 
-  const DiagramType STATE = new DiagramType("state");
-  
-  // http://yuml.me/
-  const DiagramType STRUCTURE = new DiagramType("structure");
-  
-  // http://en.wikipedia.org/wiki/SCXML
-  const DiagramType CLASS = new DiagramType("class");
-    
-  /** 
-   * The type of diagram.
-   */ 
-  immutable String type;  
+  Type {
+    State,
+    Structure, 
+    Class
+  }
   
 }

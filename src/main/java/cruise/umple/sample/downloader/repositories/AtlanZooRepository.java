@@ -14,9 +14,9 @@ import org.jsoup.select.Elements;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.sample.downloader.DiagramType;
 import cruise.umple.sample.downloader.DocumentFactory;
-import cruise.umple.sample.downloader.ImportType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.entities.ImportEntity;
 import cruise.umple.sample.downloader.entities.ImportEntityFactory;
@@ -86,7 +86,7 @@ class AtlanZooRepository implements Repository {
                         throw new IllegalArgumentException(mue);
                     }
                 })
-                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), ImportType.ECORE, url))
+                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), UmpleImportType.ECORE, url))
                 .collect(Collectors.toList());
     }
 
