@@ -7,12 +7,12 @@ namespace cruise.umple.sample.downloader;
  * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
  * @since 12 Mar 2015
  */
-class Diagram {
+class DiagramType {
 
-  Type {
-    State,
-    Structure, 
-    Class
-  }
+  const DiagramType STATE = new DiagramType("state");
+  const DiagramType STRUCTURE = new DiagramType("structure");
+  const DiagramType CLASS = new DiagramType("class");
+  
+  String type;
   
 }
