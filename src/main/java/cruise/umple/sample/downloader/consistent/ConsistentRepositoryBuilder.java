@@ -11,6 +11,7 @@ import com.google.inject.assistedinject.AssistedInject;
 
 import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.sample.downloader.DiagramType;
+import cruise.umple.sample.downloader.ImportFSM;
 
 /**
  * Builds an {@link ImportRepository} instance simply by removing some guess work. 
@@ -72,7 +73,7 @@ public class ConsistentRepositoryBuilder {
   public ConsistentRepositoryBuilder addSuccessFile(final String path, final UmpleImportType fileType) {
     log.finer("Adding successful file: path=" + path + ", type=" + fileType);
     
-    new ImportFile(path, fileType, true, "", importRepos);
+    new ImportFile(path, fileType, true, ImportFSM.Action.Completed, "", importRepos);
     
     return this;
   }
@@ -81,7 +82,7 @@ public class ConsistentRepositoryBuilder {
    * Add an unsuccessful file, the output path will likely not exist. 
    * @param path 
    * @param fileType
-   * @param errorMessage
+   * @param ex Throwable with reason
    * @return New not-{@code null} {@link ImportFile} instance. 
    * 
    * @since 11 Mar 2015
@@ -89,15 +90,16 @@ public class ConsistentRepositoryBuilder {
    * @see #addSuccessFile(String, String)
    */
   public ConsistentRepositoryBuilder addFailedFile(final String path, final UmpleImportType fileType, 
-      final Throwable error) {
-    log.finer("Adding failed file: path=" + path + ", type=" + fileType + ", error=" + error);
+      final ImportFSM.Action state, final Throwable ex) {
+    log.finer("Adding failed file: path=" + path + ", type=" + fileType + ", error=" + ex);
     
-    String message = Throwables.getRootCause(error).getMessage();
+    String message = Throwables.getRootCause(ex).getMessage();
     if (Strings.isNullOrEmpty(message)) {
-      message = error.toString();
+      message = ex.toString();
+      log.severe("Error importing model: " + Throwables.getStackTraceAsString(ex));
     }
      
-    new ImportFile(path, fileType, false, message, importRepos);
+    new ImportFile(path, fileType, false, state, message, importRepos);
     
     return this;
   }

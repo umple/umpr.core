@@ -22,6 +22,7 @@ import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
 
 import cruise.umple.sample.downloader.ConsoleMain;
+import cruise.umple.sample.downloader.ImportFSM;
 import cruise.umple.sample.downloader.ImportRuntimeData;
 import cruise.umple.sample.downloader.Repository;
 
@@ -69,10 +70,9 @@ public abstract class Consistents {
    */
   public static ImportRepositorySet buildImportRepositorySet(final Path outputFolder,
                                                              final Path srcFolder, 
-                                                             final Iterable<? extends ImportRuntimeData> allData) {
+                                                             final Iterable<? extends ImportFSM> allData) {
     
-    final Multimap<Repository, ? extends ImportRuntimeData> dataByRepo = Multimaps.index(allData, 
-                                                                                         ImportRuntimeData::getRepository);
+    final Multimap<Repository, ? extends ImportFSM> dataByRepo = Multimaps.index(allData, ImportFSM::getRepository);
     
     final ConsistentsBuilder cbld = CONSISTENTS_FACTORY.create(outputFolder, srcFolder);
     dataByRepo.asMap().entrySet().forEach(entry -> {
@@ -81,11 +81,11 @@ public abstract class Consistents {
         
         entry.getValue().forEach( data -> {
           final Path outpath = data.getOutputPath().getFileName();
-          if (data.isSuccessful()) {
+          if (!data.isSuccessful()) {
             repoBld.addSuccessFile(outpath.toString(), data.getImportType());
           } else {
             repoBld.addFailedFile(outpath.toString(), data.getImportType(), 
-                data.getFailure().get());
+                data.getAction(), data.getFailure().get());
           }
         });
         
@@ -197,7 +197,7 @@ public abstract class Consistents {
       
       gen.writeStringField("path", value.getPath());
       gen.writeStringField("type", value.getImportType().getName());
-      gen.writeBooleanField("successful", value.getSuccessful());
+      gen.writeStringField("lastState", value.getLastState().toString());
       
       if (!Strings.isNullOrEmpty(value.getMessage())) {
         gen.writeStringField("message", value.getMessage());

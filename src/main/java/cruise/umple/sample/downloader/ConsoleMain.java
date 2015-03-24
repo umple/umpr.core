@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,6 +31,7 @@ import cruise.umple.compiler.UmpleFile;
 import cruise.umple.compiler.UmpleImportHandler;
 import cruise.umple.compiler.UmpleImportHandlerFactory;
 import cruise.umple.compiler.UmpleImportModel;
+import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.compiler.UmpleModel;
 import cruise.umple.sample.downloader.consistent.Consistents;
 import cruise.umple.sample.downloader.consistent.ImportRepositorySet;
@@ -103,7 +105,7 @@ public class ConsoleMain {
      * @return Non-{@code null}, possibly empty {@link Set} of {@link ImportRuntimeData}. 
      * @since Feb 25, 2015
      */
-    public Set<ImportRuntimeData> run(final Config cfg) {
+    public Set<ImportFSM> run(final Config cfg) {
 
         cfg.outputFolder.mkdirs();
         cfg.importFileFolder.mkdirs();
@@ -125,75 +127,9 @@ public class ConsoleMain {
         }
         
         // TODO Code-smell, this pipeline should be broken down
-        final Set<ImportRuntimeData> allData = urls.parallel()
-            .map(tr -> new ImportRuntimeData(cfg.outputFolder.toPath(), tr.getPath(), tr.getImportType(),
-                                             tr, tr.getRepository()))  
-            .map(data -> {
-              try {
-                data.setInputContent(data.getInputFunction().get());
-              } catch (RuntimeException re) {
-                // we do this because the input function could theoretically fail
-                data.setFailure(re);
-              }
-                
-              return data;
-            })
-            .map(data -> {
-                data.getInputContent().ifPresent(content -> {
-                  data.getOutputPath().getParent().toFile().mkdir();
-
-                  UmpleImportHandler handler = UmpleImportHandlerFactory.create(data.getImportType());
-                  
-                  logger.fine("Importing for " + data.getOutputPath());
-                  try (InputStream in = IOUtils.toInputStream(content, Charsets.UTF_8)) {
-                    UmpleImportModel model = handler.readDataFromXML(in);
-                    if (handler.isSuccessful()) {
-                      data.setUmpleContent(model.generateUmple());
-                    } else {
-                      data.setFailure(handler.getParseException().get());
-                    }
-                  
-                  } catch (Exception e) {
-                    data.setFailure(e);
-                  }
-                });
-
-                return data;
-            })
-            .map(data -> {
-              data.getUmpleContent().ifPresent(umple -> {
-                try {
-                  final File file = new File(data.getOutputPath().toString());
-                  FileUtils.write(file, umple);
-                  
-                  data.setUmpleFile(new UmpleFile(file));
-                } catch (Exception e) {
-                  data.setFailure(e);
-                }
-              });
-              
-              return data;
-            })
-            .map(data -> {
-              
-              data.getUmpleFile().ifPresent((ufile) -> {
-                final UmpleModel model = new UmpleModel(ufile);
-                model.setShouldGenerate(false);
-                try {
-                  model.run();
-                } catch (Exception e) {
-                  data.setFailure(e);
-                }
-              });
-                
-              return data;
-            })
-            .peek(data -> {
-              // Log any failures if they exist
-              data.getFailure().ifPresent(e -> {
-                logger.fine("Failed to parse " + data.getInputFunction() + ":\n" + Throwables.getStackTraceAsString(e));
-              });
-            })
+        final Set<ImportFSM> allData = urls.parallel() //Path aOutputPath, UmpleImportType aImportType, Supplier<String> aInputFunction, Repository aRepository
+            .map(tr -> new ImportFSM(cfg.outputFolder.toPath(), tr.getImportType(), // tr.getPath(),
+                                             tr, tr.getRepository()))
             .collect(Collectors.toSet());
         
         logger.info("Saved Umple files to: " + cfg.outputFolder.getPath());

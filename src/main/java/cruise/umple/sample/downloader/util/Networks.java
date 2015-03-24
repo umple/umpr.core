@@ -12,6 +12,8 @@ import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Throwables;
 
+import cruise.umple.sample.downloader.ImportStage;
+
 /**
  * Utility methods for networking
  */
@@ -104,7 +106,7 @@ public abstract class Networks {
           log.warning("URLSupplier#get() failed with exception");
           log.warning(Throwables.getStackTraceAsString(ioe));
           
-          throw new IllegalStateException(ioe);
+          throw ImportStage.FETCH.throwAs(ioe);
         }
       }
       

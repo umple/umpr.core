@@ -1,0 +1,142 @@
+namespace cruise.umple.sample.downloader;
+
+/**
+ * Import State machine for running imports. 
+ */
+class ImportFSM {
+  
+  depend java.util.Optional;
+  depend java.util.function.Supplier;
+  depend java.io.*;
+  depend java.nio.file.Path;
+  depend java.util.logging.Logger;
+  
+  depend org.apache.commons.io.FileUtils;
+  depend org.apache.commons.io.IOUtils;
+  
+  depend com.google.common.base.Throwables;
+  depend com.google.common.base.Charsets;
+  
+  depend cruise.umple.compiler.UmpleFile;
+  depend cruise.umple.compiler.UmpleImportHandler;
+  depend cruise.umple.compiler.UmpleImportHandlerFactory;
+  depend cruise.umple.compiler.UmpleImportModel;
+  depend cruise.umple.compiler.UmpleModel;
+  depend cruise.umple.compiler.UmpleImportType;
+  
+  action {
+    Fetch {
+      entry / { doFetch(); }
+      
+      [isSuccessful()] -> Import;
+      
+      [isFailure()] -> Completed;
+    }
+      
+    Import  { 
+      entry / { doImport(); }
+      
+      
+      [isSuccessful()] -> Model;
+      
+      [isFailure()] -> Completed;
+      
+    } 
+    
+    Model {
+      entry / { doModel(); }
+      
+      -> Completed;
+    }
+    
+    Completed {
+      entry/ {
+        getFailure().ifPresent(e -> {
+          logger.info("Failed to parse " + getInputFunction() + ":\n" + Throwables.getStackTraceAsString(e));
+        });
+      }
+    }
+  }
+  
+  internal Logger logger = Logger.getLogger(getClass().getName());
+  immutable Path outputPath;
+  immutable UmpleImportType importType;
+  internal String umpleContent = null;
+  
+  immutable Supplier<String> inputFunction;
+  internal String inputContent = null;
+  
+  immutable Repository repository;
+  
+  // holds an exception if errors occur
+  defaulted Optional<Throwable> failure = Optional.<Throwable>empty();
+  
+  public Boolean isSuccessful() {
+    return !failure.isPresent();
+  }
+  
+  public Boolean isFailure() {
+    return failure.isPresent();
+  }
+  
+  /**
+   * Fetch the imported data
+   */
+  private void doFetch() {
+    try {
+      inputContent = inputFunction.get();
+    } catch (Throwable t) {
+      // we do this because the input function could theoretically fail
+      failure = Optional.of(t);
+    }
+  }
+    
+  /**
+   * Import the file
+   */
+  private void doImport() {
+    this.outputPath.getParent().toFile().mkdir();
+
+    UmpleImportHandler handler = UmpleImportHandlerFactory.create(importType);
+    
+    this.logger.fine("Importing for " + this.getOutputPath());
+    try (InputStream in = IOUtils.toInputStream(inputContent, Charsets.UTF_8)) {
+      final UmpleImportModel model = handler.readDataFromXML(in);
+      if (handler.isSuccessful()) {
+        umpleContent = model.generateUmple();
+      } else {
+        throw handler.getParseException().get();
+      }
+    } catch (Exception e) {
+      failure = Optional.of(e);
+    }
+  }
+  
+  /**
+   * Model the imported umple data
+   */
+  private void doModel() {
+    final File file = new File(getOutputPath().toString());
+                
+    try {
+      try {
+        FileUtils.write(file, umpleContent);
+      } catch (IOException ioe) {
+        file.deleteOnExit(); // make sure the file is gone on exit
+        
+        throw Throwables.propagate(ioe);
+      }
+      
+      // load the umple file
+      final UmpleFile uFile = new UmpleFile(file);
+      
+      // run the model
+      final UmpleModel model = new UmpleModel(uFile);
+      model.setShouldGenerate(false);
+      model.run(); 
+    } catch (Exception e) {
+      
+      failure = Optional.of(e);
+    }
+  }
+}

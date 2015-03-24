@@ -2,14 +2,23 @@ namespace cruise.umple.sample.downloader.consistent;
 
 class ImportFile {
   depend cruise.umple.compiler.UmpleImportType;
+  depend cruise.umple.sample.downloader.ImportFSM;
 
   immutable String path;
   
   immutable UmpleImportType importType;
   
-  immutable Boolean successful;
+  internal String lastStage;
   
   immutable String message;
+  
+  ImportFSM.Action getLastState() {
+    return ImportFSM.State.valueOf(lastStage);
+  } 
+  
+  Boolean isSuccessful() {
+    return getLastState() == ImportFSM.Action.Completed;
+  }
 }
 
 class ImportRepository {

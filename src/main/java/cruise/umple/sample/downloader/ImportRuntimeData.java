@@ -13,6 +13,7 @@ import com.google.common.base.Throwables;
 
 import cruise.umple.compiler.UmpleFile;
 import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.sample.downloader.ImportStage.StageException;
 
 /**
  * Stores data throughout the process
@@ -32,7 +33,9 @@ public class ImportRuntimeData {
   private final Repository repository;
   
   // holds an exception if errors occur
-  private Optional<Exception> failure = Optional.empty();
+  private Optional<StageException> failure = Optional.empty();
+  
+  private ImportStage stage = ImportStage.FETCH;
   
   /**
    * Create a new instance of Data, a simple struct
@@ -40,13 +43,20 @@ public class ImportRuntimeData {
    * @param input
    * @param repository
    */
-  ImportRuntimeData(Path outputFolder, Path inputName, final UmpleImportType fileType, Supplier<String> inputFunc, Repository repository) {        
+  ImportRuntimeData(final Path outputFolder, final Path inputName, final UmpleImportType fileType, 
+      final Supplier<String> inputFunc, final Repository repository) {        
     checkNotNull(inputName);
     this.outputFile = Paths.get(outputFolder.toAbsolutePath().toString(),
         repository.getName(), inputName.getFileName().toString() + ".ump");
     this.repository = checkNotNull(repository);
     this.inputFunction = checkNotNull(inputFunc);
     this.importType = fileType;
+  }
+  
+  public ImportStage nextStage() {
+    this.stage = this.stage.next();
+    
+    return this.stage;
   }
 
   public Optional<String> getInputContent() {
@@ -73,11 +83,11 @@ public class ImportRuntimeData {
     return !failure.isPresent();
   }
 
-  public Optional<Exception> getFailure() {
+  public Optional<StageException> getFailure() {
     return failure;
   }
 
-  public void setFailure(final Exception failure) {
+  public void setFailure(final StageException failure) {
     this.failure = Optional.of(failure);
   }
   

@@ -17,6 +17,7 @@ import com.google.inject.Singleton;
 import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.sample.downloader.DiagramType;
 import cruise.umple.sample.downloader.DocumentFactory;
+import cruise.umple.sample.downloader.ImportStage;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.entities.ImportEntity;
 import cruise.umple.sample.downloader.entities.ImportEntityFactory;
@@ -83,7 +84,7 @@ class AtlanZooRepository implements Repository {
                     try {
                         return new URL(e.attr("href"));
                     } catch (MalformedURLException mue) {
-                        throw new IllegalArgumentException(mue);
+                        throw ImportStage.FETCH.throwAs(mue);
                     }
                 })
                 .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), UmpleImportType.ECORE, url))
