@@ -16,4 +16,8 @@ public class Pair<F, S> {
         this.first = first;
         this.second = second;
     }
+    
+    public static <U, V>  Pair<U, V> create(final U first, final V second) {
+      return new Pair<>(first, second);
+    }
 }

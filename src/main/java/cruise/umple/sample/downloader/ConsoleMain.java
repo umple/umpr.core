@@ -12,8 +12,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -28,9 +26,9 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import cruise.umple.compiler.EcoreImportHandler;
 import cruise.umple.compiler.UmpleFile;
 import cruise.umple.compiler.UmpleImportHandler;
+import cruise.umple.compiler.UmpleImportHandlerFactory;
 import cruise.umple.compiler.UmpleImportModel;
 import cruise.umple.compiler.UmpleModel;
 import cruise.umple.sample.downloader.consistent.Consistents;
@@ -144,7 +142,7 @@ public class ConsoleMain {
                 data.getInputContent().ifPresent(content -> {
                   data.getOutputPath().getParent().toFile().mkdir();
 
-                  UmpleImportHandler handler = new EcoreImportHandler();
+                  UmpleImportHandler handler = UmpleImportHandlerFactory.create(data.getImportType());
                   
                   logger.fine("Importing for " + data.getOutputPath());
                   try (InputStream in = IOUtils.toInputStream(content, Charsets.UTF_8)) {
@@ -155,7 +153,7 @@ public class ConsoleMain {
                       data.setFailure(handler.getParseException().get());
                     }
                   
-                  } catch (ParserConfigurationException | IOException e) {
+                  } catch (Exception e) {
                     data.setFailure(e);
                   }
                 });
@@ -190,7 +188,7 @@ public class ConsoleMain {
                 
               return data;
             })
-            .peek((data) -> {
+            .peek(data -> {
               // Log any failures if they exist
               data.getFailure().ifPresent(e -> {
                 logger.fine("Failed to parse " + data.getInputFunction() + ":\n" + Throwables.getStackTraceAsString(e));

@@ -82,7 +82,7 @@ public class ConsistentsTest {
           e.get();
           rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
         } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ex.getMessage());
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ex);
         }
       });
       
