@@ -10,7 +10,6 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
 import cruise.umple.compiler.UmpleImportType;
-import cruise.umple.sample.downloader.ImportStage;
 import cruise.umple.sample.downloader.Repository;
 
 /**
@@ -85,11 +84,7 @@ final class StringEntity implements ImportEntity {
 
   @Override
   public String get() {
-    try {
-      return content.get();
-    } catch (RuntimeException re) {
-      throw ImportStage.FETCH.throwAs(re);
-    }
+    return content.get();
   }
   
   @Override
