@@ -26,14 +26,11 @@ class ImportFSM {
   
   depend cruise.umple.sample.downloader.Repository;
   
-  
-  action {
+  state {
     Fetch {
       entry / { doFetch(); }
       
       [isSuccessful()] -> Import;
-      
-      [isFailure()] -> Completed;
     }
       
     Import  { 
@@ -42,14 +39,12 @@ class ImportFSM {
       
       [isSuccessful()] -> Model;
       
-      [isFailure()] -> Completed;
-      
     } 
     
     Model {
       entry / { doModel(); }
       
-      -> Completed;
+      [isSuccessful()] -> Completed;
     }
     
     Completed {
@@ -74,11 +69,11 @@ class ImportFSM {
   // holds an exception if errors occur
   defaulted Optional<Throwable> failure = Optional.<Throwable>empty();
   
-  public Boolean isSuccessful() {
+  public boolean isSuccessful() {
     return !failure.isPresent();
   }
   
-  public Boolean isFailure() {
+  public boolean isFailure() {
     return failure.isPresent();
   }
   

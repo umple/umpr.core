@@ -76,7 +76,7 @@ public class BuildersTest {
           e.get();
           rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
         } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ImportFSM.Action.Fetch, ex);
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ImportFSM.State.Fetch, ex);
         }
       });
     });
@@ -101,7 +101,7 @@ public class BuildersTest {
         }
       });
       
-      assertEquals(counter.get(), 1, "Found multiple failed resource gathers, expected 1.");
+      assertEquals(counter.get(), 1, "Found incorrect failed resource gathers.");
     });
   }
 }

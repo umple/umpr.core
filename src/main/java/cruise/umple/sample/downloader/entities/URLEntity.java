@@ -32,7 +32,8 @@ final class URLEntity implements ImportEntity {
       @Assisted Path path, @Assisted URL url) {
     this.log = log;
     
-    this.wrappedEntity = factory.createStringEntity(repository, path, fileType, Networks.newURLDownloader(url));
+    this.wrappedEntity = factory.createStringEntity(repository, path.subpath(path.getNameCount()-1, path.getNameCount()), 
+        fileType, Networks.newURLDownloader(url));
   }
   
 

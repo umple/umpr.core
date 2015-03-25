@@ -3,36 +3,27 @@ package cruise.umple.sample.downloader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import cruise.umple.compiler.UmpleFile;
-import cruise.umple.compiler.UmpleImportHandler;
-import cruise.umple.compiler.UmpleImportHandlerFactory;
-import cruise.umple.compiler.UmpleImportModel;
-import cruise.umple.compiler.UmpleImportType;
-import cruise.umple.compiler.UmpleModel;
 import cruise.umple.sample.downloader.consistent.Consistents;
 import cruise.umple.sample.downloader.consistent.ImportRepositorySet;
 import cruise.umple.sample.downloader.entities.ImportEntity;
@@ -43,7 +34,7 @@ public class ConsoleMain {
     static class Config {
 
         @Parameter(names={"-import", "-i"}, description = "Folder to save import files to")
-        File importFileFolder = Files.createTempDir();
+        File importFileFolder;
 
         @Parameter(names={"-o", "--output"}, description = "Output folder for generated .ump files", required = true)
         File outputFolder;
@@ -55,7 +46,13 @@ public class ConsoleMain {
                 "no guarentees to which repositories are used")
         Integer limit = -1;
 
-        Config() { }
+        Config() { 
+          try {
+            importFileFolder = Files.createTempDirectory(getClass().getName() + "-ImportFiles").toFile();
+          } catch (IOException ioe) {
+            throw Throwables.propagate(ioe);
+          }
+        }
 
         @Override
         public String toString() {
@@ -106,7 +103,16 @@ public class ConsoleMain {
      * @since Feb 25, 2015
      */
     public Set<ImportFSM> run(final Config cfg) {
-
+        
+        Path workingDir;
+        try {
+          workingDir = java.nio.file.Files.createTempDirectory(getClass().getName() + "-working-dir-");
+        } catch (IOException e) {
+          throw Throwables.propagate(e);
+        }
+        
+        logger.info("Working directory: " + workingDir.toString());
+        
         cfg.outputFolder.mkdirs();
         cfg.importFileFolder.mkdirs();
 
@@ -126,12 +132,17 @@ public class ConsoleMain {
             urls = urls.limit(cfg.limit);
         }
         
-        // TODO Code-smell, this pipeline should be broken down
         final Set<ImportFSM> allData = urls.parallel() //Path aOutputPath, UmpleImportType aImportType, Supplier<String> aInputFunction, Repository aRepository
-            .map(tr -> new ImportFSM(cfg.outputFolder.toPath(), tr.getImportType(), // tr.getPath(),
-                                             tr, tr.getRepository()))
+            .map(tr -> new ImportFSM(Paths.get(workingDir.toString(), tr.getRepository().getName(), tr.getPath().toString()),
+                                     tr.getImportType(), tr, tr.getRepository()))
             .collect(Collectors.toSet());
         
+        try {
+          Files.deleteIfExists(cfg.outputFolder.toPath());
+          Files.move(workingDir, cfg.outputFolder.toPath());
+        } catch (IOException ioe) {
+          throw Throwables.propagate(ioe);
+        }
         logger.info("Saved Umple files to: " + cfg.outputFolder.getPath());
         
         final ImportRepositorySet set = Consistents.buildImportRepositorySet(cfg.outputFolder.toPath(), 
@@ -144,7 +155,7 @@ public class ConsoleMain {
         try (FileOutputStream fos = new FileOutputStream(jsonPath.toFile())) {
           IOUtils.write(json, fos);
           
-          logger.info("Metadata written to " + jsonPath);
+          logger.info("Metadata written to: " + jsonPath);
         } catch (IOException e) {
           logger.severe(() -> "Exception writing metadata to file.\n" + Throwables.getStackTraceAsString(e));
           throw Throwables.propagate(e);
