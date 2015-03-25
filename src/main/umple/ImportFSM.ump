@@ -24,6 +24,9 @@ class ImportFSM {
   depend cruise.umple.compiler.UmpleModel;
   depend cruise.umple.compiler.UmpleImportType;
   
+  depend cruise.umple.sample.downloader.Repository;
+  
+  
   action {
     Fetch {
       entry / { doFetch(); }

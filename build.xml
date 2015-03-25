@@ -83,14 +83,8 @@
   
   <target name="compile.quick" depends="init" description="Run compilation of library code, no dependencies are run.">
     <echo message="Compling umple sources ${src.dir.gen.umple} -> ${build.dir.main.compile}" />
-    <javac srcdir="${src.dir.gen.umple}" destdir="${build.dir.main.compile}" includeantruntime="true">
-      <classpath refid="build.path" />
-      <classpath path="${umple.core.jar}" />
-      <exclude name="**/.git" />
-    </javac>
-
     <echo message="Compling core ${src.dir.main.java} -> ${build.dir.main.compile}" />
-    <javac srcdir="${src.dir.main.java}" destdir="${build.dir.main.compile}" includeantruntime="true">
+    <javac srcdir="${src.dir.gen.umple}:${src.dir.main.java}" destdir="${build.dir.main.compile}" includeantruntime="true">
       <classpath refid="build.path" />
       <classpath path="${umple.core.jar}" />
       <exclude name="**/.git" />

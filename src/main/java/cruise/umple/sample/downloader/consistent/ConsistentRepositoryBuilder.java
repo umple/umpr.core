@@ -73,7 +73,8 @@ public class ConsistentRepositoryBuilder {
   public ConsistentRepositoryBuilder addSuccessFile(final String path, final UmpleImportType fileType) {
     log.finer("Adding successful file: path=" + path + ", type=" + fileType);
     
-    new ImportFile(path, fileType, true, ImportFSM.Action.Completed, "", importRepos);
+    final ImportFile file = new ImportFile(path, fileType, "", importRepos);
+    file.setLastAction(ImportFSM.Action.Completed);
     
     return this;
   }
@@ -99,7 +100,8 @@ public class ConsistentRepositoryBuilder {
       log.severe("Error importing model: " + Throwables.getStackTraceAsString(ex));
     }
      
-    new ImportFile(path, fileType, false, state, message, importRepos);
+    final ImportFile file = new ImportFile(path, fileType, message, importRepos);
+    file.setLastAction(state);
     
     return this;
   }

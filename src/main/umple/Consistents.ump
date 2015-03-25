@@ -8,16 +8,20 @@ class ImportFile {
   
   immutable UmpleImportType importType;
   
-  internal String lastStage;
+  private ImportFSM.Action lastAction;
   
   immutable String message;
   
-  ImportFSM.Action getLastState() {
-    return ImportFSM.State.valueOf(lastStage);
-  } 
-  
   Boolean isSuccessful() {
-    return getLastState() == ImportFSM.Action.Completed;
+    return getLastAction() == ImportFSM.Action.Completed;
+  }
+  
+  public void setLastAction(final ImportFSM.Action action) {
+    this.lastAction = action;
+  }
+  
+  public ImportFSM.Action getLastAction() {
+    return this.lastAction;
   }
 }
 

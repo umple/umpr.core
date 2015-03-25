@@ -197,7 +197,7 @@ public abstract class Consistents {
       
       gen.writeStringField("path", value.getPath());
       gen.writeStringField("type", value.getImportType().getName());
-      gen.writeStringField("lastState", value.getLastState().toString());
+      gen.writeStringField("lastState", value.getLastAction().toString());
       
       if (!Strings.isNullOrEmpty(value.getMessage())) {
         gen.writeStringField("message", value.getMessage());

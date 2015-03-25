@@ -17,6 +17,7 @@ import com.jayway.jsonassert.JsonAssert;
 import com.jayway.jsonassert.JsonAsserter;
 
 import cruise.umple.sample.downloader.DiagramType;
+import cruise.umple.sample.downloader.ImportFSM;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.repositories.TestRepository;
 import cruise.umple.sample.downloader.util.MockModule;
@@ -82,7 +83,7 @@ public class ConsistentsTest {
           e.get();
           rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
         } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ex);
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ImportFSM.Action.Fetch, ex);
         }
       });
       

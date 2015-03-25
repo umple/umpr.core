@@ -19,6 +19,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.sample.downloader.ImportFSM;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.repositories.TestRepository;
 import cruise.umple.sample.downloader.util.MockModule;
@@ -75,7 +76,7 @@ public class BuildersTest {
           e.get();
           rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
         } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ex);
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ImportFSM.Action.Fetch, ex);
         }
       });
     });
