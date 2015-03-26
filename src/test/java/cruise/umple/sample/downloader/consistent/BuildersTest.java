@@ -1,43 +1,56 @@
 package cruise.umple.sample.downloader.consistent;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.io.Files;
 import com.google.inject.Inject;
 
-import cruise.umple.sample.downloader.ImportType;
+import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.repositories.TestRepository;
-import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
+import cruise.umple.sample.downloader.util.MockModule;
 
-@Guice(modules=MockDocumentFactoryModule.class)
+@Guice(modules=MockModule.class)
 public class BuildersTest {
   
   private ConsistentsBuilder bld;
+  private final ConsistentsFactory factory;
   private final Set<Repository> repos;
   
   @Inject
   public BuildersTest(ConsistentsFactory factory, Set<Repository> repos) {
-    bld = factory.create(".");
     this.repos = repos;
+    this.factory = factory;
+  }
+  
+  private long time;
+  
+  @BeforeMethod
+  public void setup() {
+    time = System.currentTimeMillis();
+    bld = factory.create(Paths.get("."), Files.createTempDir().toPath());
   }
   
   
   @SuppressWarnings("deprecation")
   @Test
   public void simpleNoRepositories() {
-    final long time = System.currentTimeMillis();
-    final Time now = new Time(time);
     final Date nowD = new Date(time);
+    final Time now = new Time(time);
     
     final ImportRepositorySet fromBld = bld.getRepositorySet();
     
@@ -46,8 +59,10 @@ public class BuildersTest {
     assertEquals(fromBld.getDate().getDay(), nowD.getDay());
     
     // THIS IS BAD, BUT UMPLE USES java.sql.Date INSTEAD OF java.util.Calendar or java.util.Duration
-    assertEquals(fromBld.getTime().getHours(), now.getHours());
-    assertEquals(fromBld.getTime().getMinutes(), now.getMinutes());
+    assertEquals(fromBld.getTime().getHours(), now.getHours(), 
+        "If this fails, re-run before raising issue -- hour may have rolled over");
+    assertEquals(fromBld.getTime().getMinutes(), now.getMinutes(), 
+        "If this fails, re-run before raising issue -- minute may have rolled over");
     
     assertEquals(fromBld.getRepositories().size(), 0);
   }
@@ -61,7 +76,7 @@ public class BuildersTest {
           e.get();
           rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
         } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), Throwables.getStackTraceAsString(ex));
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), Throwables.getRootCause(ex).toString());
         }
       });
     });
@@ -76,11 +91,12 @@ public class BuildersTest {
       repo.getFiles().forEach(f -> {
         final String name = f.getPath();
         assertTrue(TestRepository.ECORE_FILES_SET.contains(name), "Unknown path found: " + name);
-        assertEquals(f.getImportType(), ImportType.ECORE);
+        assertEquals(f.getImportType(), UmpleImportType.ECORE);
+        
         if (f.isSuccessful()) {
-          assertEquals(f.getMessage(), "");
+          assertTrue(Strings.isNullOrEmpty(f.getMessage()), "Message was not empty when successful.");
         } else {
-          assertTrue(f.getMessage().contains("RESOURCE_FAILURE"), "Intentional fail was not found.");
+          assertFalse(Strings.isNullOrEmpty(f.getMessage()), "Message was empty when failed.");
           counter.incrementAndGet();
         }
       });

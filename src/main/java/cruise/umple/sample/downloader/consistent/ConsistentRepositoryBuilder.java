@@ -7,7 +7,8 @@ import java.util.logging.Logger;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
-import cruise.umple.sample.downloader.ImportType;
+import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.sample.downloader.DiagramType;
 
 /**
  * Builds an {@link ImportRepository} instance simply by removing some guess work. 
@@ -28,13 +29,33 @@ public class ConsistentRepositoryBuilder {
       @Assisted final ConsistentsBuilder parent, 
       @Assisted("name") final String name, 
       @Assisted("description") final String description,
+      @Assisted final DiagramType diagramType,
       @Assisted final ImportRepositorySet repSet) {
     this.log = log;
     
     this.importRepos = new ImportRepository(checkNotNull(name), checkNotNull(description), checkNotNull(name), 
-        checkNotNull(repSet));
+        checkNotNull(diagramType), checkNotNull(repSet));
     this.parent = checkNotNull(parent);
   }
+  
+  /**
+   * Given the files within the current import repository, calculate the rate of successes. 
+   * 
+   * <strong>Warning: This will set the success rate to {@code NaN} if no files are set.</strong>
+   * @return {@code this}. 
+   */
+  public ConsistentRepositoryBuilder withCalculatedSuccessRate() {
+    final long scount = importRepos.getFiles().stream().filter(ImportFile::isSuccessful).count();
+    
+    importRepos.setSuccessRate(Double.valueOf(scount) / importRepos.numberOfFiles());
+    
+    if (importRepos.numberOfFiles() == 0) {
+      log.warning("withCalculatedSuccessRate: Set successRate to NaN");
+    }
+  
+    return this;
+  }
+  
   
   /**
    * Add a file that was successfully imported.
@@ -46,7 +67,7 @@ public class ConsistentRepositoryBuilder {
    * 
    * @see #addFailedFile(String, String, String)
    */
-  public ConsistentRepositoryBuilder addSuccessFile(final String path, final ImportType fileType) {
+  public ConsistentRepositoryBuilder addSuccessFile(final String path, final UmpleImportType fileType) {
     log.finer("Adding successful file: path=" + path + ", type=" + fileType);
     
     new ImportFile(path, fileType, true, "", importRepos);
@@ -65,7 +86,8 @@ public class ConsistentRepositoryBuilder {
    * 
    * @see #addSuccessFile(String, String)
    */
-  public ConsistentRepositoryBuilder addFailedFile(final String path, final ImportType fileType, final String errorMessage) {
+  public ConsistentRepositoryBuilder addFailedFile(final String path, final UmpleImportType fileType, 
+      final String errorMessage) {
     log.finer("Adding failed file: path=" + path + ", type=" + fileType + ", error=" + errorMessage);
     
     new ImportFile(path, fileType, false, errorMessage, importRepos);

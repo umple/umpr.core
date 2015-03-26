@@ -24,11 +24,11 @@ public interface Repository {
     
 
     /**
-     * Get the type of files in the repository.
+     * Get the diagram types in the repository.
      *
-     * @return The type of file
+     * @return The diagrams of file
      */
-    public ImportType getImportType();
+    public DiagramType getDiagramType();
 
     /**
      * Get a list of URL instances where the import files may be stored.

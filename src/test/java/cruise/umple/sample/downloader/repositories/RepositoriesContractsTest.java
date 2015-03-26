@@ -71,7 +71,7 @@ public class RepositoriesContractsTest {
     @Test
     public void checkFileType() {
       for (Repository r : allRepositories) {
-        assertNotNull(r.getImportType(), "Repository, " + r.getName() + ", has a null FileType.");
+        assertNotNull(r.getDiagramType(), "Repository, " + r.getName() + ", has a null DiagramType.");
       }
     }
     
@@ -91,10 +91,11 @@ public class RepositoriesContractsTest {
         assertNotNull(imports, "urls response was null");
         
         for (final ImportEntity ie : imports) {
-          assertNotNull(ie, "Triple was null");
+          assertNotNull(ie, "ImportEntity was null");
           assertEquals(ie.getRepository(), r, "Import from Repository, " + r.getName() + ", do not have proper Repository set");
           assertNotNull(ie.getPath(), "Import path from Repository, " + r.getName() + ", was null.");
           assertNotNull(ie.get(), "Import InputStream from Repository, " + r.getName() + ", was null.");
+          assertNotNull(ie.getImportType(), "ImportEntity::getImportType() from Repository, " + r.getName() + ", was null.");
         }
       }
     }

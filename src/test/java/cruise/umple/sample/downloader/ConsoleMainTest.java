@@ -2,7 +2,7 @@ package cruise.umple.sample.downloader;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.testng.Assert;
@@ -14,14 +14,13 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-import cruise.umple.sample.downloader.consistent.ImportRepository;
-import cruise.umple.sample.downloader.consistent.ImportRepositorySet;
-import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
+import cruise.umple.sample.downloader.repositories.TestRepository;
+import cruise.umple.sample.downloader.util.MockModule;
 
 /**
  * Created by kevin on 15-02-23.
  */
-@Guice(modules={MockDocumentFactoryModule.class})
+@Guice(modules={MockModule.class})
 public class ConsoleMainTest {
 
     @Inject
@@ -39,7 +38,7 @@ public class ConsoleMainTest {
     @BeforeMethod
     public void beforeMethod() {
         cfg = new ConsoleMain.Config();
-        cfg.limit = 3; // for speed
+        cfg.limit = -1; // for speed
         cfg.outputFolder = Files.createTempDir();
         cfg.outputFolder.deleteOnExit();
 
@@ -65,9 +64,9 @@ public class ConsoleMainTest {
      */
     @Test
     public void limitConfig() {
-        cfg.limit = 1;
+        cfg.limit = 3;
 
-        List<ImportRuntimeData> data = main.run(cfg);
+        Set<?> data = main.run(cfg);
         int count = data.size();
 
         Assert.assertEquals(count, cfg.limit.intValue(), "Did not limit files to " + cfg.limit);
@@ -80,10 +79,9 @@ public class ConsoleMainTest {
      */
     @Test
     public void testRepositories() {
-        cfg.limit = 3; // get all of them
-        List<?> data = main.run(cfg);
+        Set<?> data = main.run(cfg);
 
-        Assert.assertEquals(data.size(), cfg.limit.longValue(),
+        Assert.assertEquals(data.size(), TestRepository.ECORE_FILES_SET.size(),
                 "Failed to import properly.");
     }
 

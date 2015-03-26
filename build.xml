@@ -4,10 +4,6 @@
   <taskdef name="umplec" classname="cruise.umple.util.UmplecAntTask" classpath="${umple.core.jar}" />
 
   <property file="build.properties" />
-  <!-- Uncomment the following property if no tests compilation is needed -->
-  <!-- 
-  <property name="skip.tests" value="true"/>
-   -->
 
   <exec executable="git" outputproperty="git.revision">
     <arg value="describe" />
@@ -15,26 +11,26 @@
   </exec>
   <property name="version" value="0.0.0-${git.revision}" />
 
-  <property name="build.dir" value="./bin" />
+  <property name="build.dir" value="bin" />
   <property name="build.dir.main" value="${build.dir}/main" />
-  <property name="build.dir.main.compile" value="${build.dir.main}/" />
+  <property name="build.dir.main.compile" value="${build.dir.main}" />
   <property name="build.dir.main.resources" value="${build.dir.main.compile}" />
 
   <!-- Tests -->
   <property name="test.groups" value="" />
   <property name="test.excludegroups" value="long-runtime" />
-  <property name="build.dir.test" value="./bin/test" />
-  <property name="build.dir.test.report" value="./test-report" />
+  <property name="build.dir.test" value="bin/test" />
+  <property name="build.dir.test.report" value="test-report" />
   <property name="build.dir.test.compile" value="${build.dir.test}" />
   <property name="build.dir.test.resources" value="${build.dir.test.compile}" />
 
   <!-- src directories -->
-  <property name="src.dir" value="./src" />
+  <property name="src.dir" value="src" />
   <property name="src.dir.main" value="${src.dir}/main" />
   <property name="src.dir.main.java" value="${src.dir.main}/java" />
   <property name="src.dir.main.resources" value="${src.dir.main}/resources" />
   <property name="src.dir.main.umple" value="${src.dir.main}/umple" />
-  <property name="src.dir.gen" value="${src.dir}/gen/" />
+  <property name="src.dir.gen" value="${src.dir}/gen" />
   <property name="src.dir.gen.umple" value="${src.dir.gen}/umple" />
   <property name="src.dir.test" value="${src.dir}/test" />
   <property name="src.dir.test.java" value="${src.dir.test}/java" />
@@ -70,28 +66,30 @@
        dest="${ivy.jar.file}" usetimestamp="true" />
   </target>
 
-  <target name="resolve" depends="install-ivy" description="--> retrieve dependencies with ivy">
+  <target name="ivy-resolve" depends="install-ivy" description="--> retrieve dependencies with ivy">
     <ivy:resolve />
     <ivy:retrieve sync="true" />
-    <ivy:cachepath pathid="build.path" conf="build" />
-    <ivy:cachepath pathid="test.path" conf="test" />
-
-    <path id="ivylib.path.id">
-      <fileset dir="${ivy.lib.dir}" />
-    </path>
+  	
+  	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+  	  <classpath>
+  	    <pathelement location="${ivy.jar.dir}/ant-contrib-0.3.jar"/>
+  	  </classpath>
+  	</taskdef>
   </target>
 
   <target name="umpleGen" depends="init" description="Run umple against models shared between web interface">
     <umplec src="${src.dir.main.umple}/Master.ump" dest="${src.dir.gen.umple}" generate="Java" />
   </target>
-
-  <target name="compile" depends="init,umpleGen" description="Compile core code">
+  
+  <target name="compile.quick" depends="init" description="Run compilation of library code, no dependencies are run.">
+    <echo message="Compling umple sources ${src.dir.gen.umple} -> ${build.dir.main.compile}" />
     <javac srcdir="${src.dir.gen.umple}" destdir="${build.dir.main.compile}" includeantruntime="true">
       <classpath refid="build.path" />
       <classpath path="${umple.core.jar}" />
       <exclude name="**/.git" />
     </javac>
 
+    <echo message="Compling core ${src.dir.main.java} -> ${build.dir.main.compile}" />
     <javac srcdir="${src.dir.main.java}" destdir="${build.dir.main.compile}" includeantruntime="true">
       <classpath refid="build.path" />
       <classpath path="${umple.core.jar}" />
@@ -105,7 +103,11 @@
     </copy> -->
   </target>
 
-  <target name="test.compile" depends="init, compile" description="Compile test code">
+  <target name="compile" depends="init, ivy-resolve, umpleGen, compile.quick" description="Compile core code">
+    
+  </target>
+  
+  <target name="test.compile.quick" depends="compile.quick" description="Only compile code, no dependencies.">
     <echo message="Compling test cases ${src.dir.test.java} -> ${build.dir.test.compile}" />
     <javac srcdir="${src.dir.test.java}" destdir="${build.dir.test.compile}" includeantruntime="true">
       <classpath refid="test.path" />
@@ -118,6 +120,10 @@
     </copy>
   </target>
 
+  <target name="test.compile" depends="init, compile, test.compile.quick" description="Compile test code">
+    
+  </target>
+
   <target name="test" depends="test.compile" description="Run TestNG test cases">
     <taskdef name="testng" classname="org.testng.TestNGAntTask">
       <classpath>
@@ -126,7 +132,11 @@
     </taskdef>
 
     <echo>Running tests -> ${build.dir.test.report}</echo>
-    <testng workingDir="${build.dir.test.report}" outputdir="${build.dir.test.report}" haltonfailure="on" groups="${test.groups}" excludedgroups="${test.excludegroups}">
+    <testng workingDir="${build.dir.test.report}"
+            outputdir="${build.dir.test.report}" 
+            failureProperty="testsFailed" 
+    	      groups="${test.groups}" 
+    	      excludedgroups="${test.excludegroups}">
       <classpath>
         <pathelement location="${build.dir.main.compile}" />
         <pathelement location="${build.dir.test.compile}" />
@@ -135,11 +145,20 @@
       </classpath>
       <classfileset dir="${build.dir.test.compile}" includes="**/*.class" />
     </testng>
+  	
+  	<if>
+  		<isset property="testsFailed"/>
+  		<then>
+  			<loadfile property="failedTestCases"
+  			      srcFile="${build.dir.test.report}/testng-failed.xml" />
+  			<fail message="${failedTestCases}" />
+  		</then>
+		</if>
 
   </target>
 
   <!-- Group all dependencies into a big dependency-all.jar -->
-  <target name="package.dependencies" depends="resolve">
+  <target name="package.dependencies" depends="init, ivy-resolve">
     <mkdir dir="${dist.dir}" />
 
     <jar jarfile="${dist.dependency.jar}">
@@ -182,12 +201,20 @@
     <delete dir="${ivy.lib.dir}" />
   </target>
 
-  <target name="init" description="Build initialization" depends="install-ivy, resolve">
+  <target name="init" description="Build initialization" depends="install-ivy">
     <mkdir dir="${build.dir.main}" />
     <mkdir dir="${build.dir.main.compile}" />
 
     <mkdir dir="${build.dir.test}" />
     <mkdir dir="${build.dir.test.compile}" />
+  	
+  	<!-- Setup the ivy class paths -->
+  	<ivy:cachepath pathid="build.path" conf="build" />
+    <ivy:cachepath pathid="test.path" conf="test" />
+
+    <path id="ivylib.path.id">
+      <fileset dir="${ivy.lib.dir}" />
+    </path>
   </target>
 
   <target name="build.modules" depends="clean, init, compile" description="build all modules" />

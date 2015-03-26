@@ -12,16 +12,17 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Throwables;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import cruise.umple.sample.downloader.ImportType;
+import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.sample.downloader.DiagramType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.entities.ImportEntity;
 import cruise.umple.sample.downloader.entities.ImportEntityFactory;
@@ -34,6 +35,7 @@ import cruise.umple.sample.downloader.entities.ImportEntityFactory;
  *
  * @since 11 Mar 2015
  */
+@Singleton
 public class TestRepository implements Repository {
   
   public static final String TEST_NAME = "TestRespository-ECore";
@@ -49,7 +51,10 @@ public class TestRepository implements Repository {
       .add("ocl-operations.ecore")
       .add("sharengo.ecore")
       .add("intentional-failure.ecore")
+      .add("adelfe.model-failure.ecore")
       .build();
+  
+  public static final double SUCCESS_RATE;
   
   public static final Set<String> ECORE_FILES_SET = ImmutableSet.copyOf(ECORE_FILES);
   public static final Map<String, Supplier<String> > ECORE_MAP;
@@ -57,7 +62,7 @@ public class TestRepository implements Repository {
   
   static {
     
-    Map<String, Supplier<String>> content = Maps.asMap(Sets.newHashSet(ECORE_FILES), path -> 
+    Map<String, Supplier<String>> content = Maps.asMap(ECORE_FILES_SET, path -> 
       () -> {
           try {
             URL url = Resources.getResource("repositories/" + path);
@@ -75,9 +80,13 @@ public class TestRepository implements Repository {
       try {
         return val.get();
       } catch (IllegalStateException ise) {
-        return Throwables.getStackTraceAsString(ise);
+        return ise.getMessage();
       }
     });
+    
+    long successes = ECORE_CONTENT.values().stream().filter(s -> { return !s.startsWith("RESOURCE_FAILURE"); }).count();
+    
+    SUCCESS_RATE = (1.0 * successes) / ECORE_CONTENT.values().size();
   }
   
   @Inject
@@ -86,7 +95,7 @@ public class TestRepository implements Repository {
     ImmutableList.Builder<ImportEntity> bld = ImmutableList.builder();
     
     ECORE_MAP.entrySet().forEach(entry -> {
-      bld.add(factory.createStringEntity(this, Paths.get(entry.getKey()), ImportType.ECORE, entry.getValue()));
+      bld.add(factory.createStringEntity(this, Paths.get(entry.getKey()), UmpleImportType.ECORE, entry.getValue()));
     });
     
     entities = bld.build();
@@ -112,8 +121,8 @@ public class TestRepository implements Repository {
    * @see cruise.umple.sample.downloader.Repository#getFileType()
    */
   @Override
-  public ImportType getImportType() {
-    return ImportType.ECORE;
+  public DiagramType getDiagramType() {
+    return DiagramType.CLASS;
   }
 
   /* (non-Javadoc)
@@ -130,6 +139,11 @@ public class TestRepository implements Repository {
   @Override
   public boolean isAccessible() {
     return true;
+  }
+  
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(getClass()).toString();
   }
 
 }

@@ -1,6 +1,8 @@
 package cruise.umple.sample.downloader.consistent;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Set;
 
@@ -10,16 +12,16 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.jayway.jsonassert.JsonAssert;
 import com.jayway.jsonassert.JsonAsserter;
 
+import cruise.umple.sample.downloader.DiagramType;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.repositories.TestRepository;
-import cruise.umple.sample.downloader.util.MockDocumentFactoryModule;
+import cruise.umple.sample.downloader.util.MockModule;
 
-@Guice(modules={MockDocumentFactoryModule.class})
+@Guice(modules={MockModule.class})
 @Test
 public class ConsistentsTest {
   
@@ -36,8 +38,8 @@ public class ConsistentsTest {
   }
   
   @BeforeMethod
-  public void setup() {
-    bld = factory.create(".");
+  public void setup() throws IOException {
+    bld = factory.create(Paths.get("."), Files.createTempDirectory("TEST_"));
   }
  
   @Test
@@ -49,7 +51,8 @@ public class ConsistentsTest {
     JsonAssert.with(json)
       .assertEquals("$.date", fromBld.getDate().getTime()).and()
       .assertEquals("$.time", fromBld.getTime().getTime()).and()   
-      .assertEquals("$.rootPath", fromBld.getRootPath()).and()
+      .assertEquals("$.umple", fromBld.getUmplePath()).and() 
+      .assertEquals("$.src", fromBld.getSrcPath()).and()
       .assertEquals("$.repositories", Collections.<ImportRepository>emptyList());
   }
   
@@ -62,6 +65,10 @@ public class ConsistentsTest {
     
     JsonAssert.with(json)
       .assertEquals("$.repositories[0].path", TestRepository.TEST_NAME).and()
+      .assertEquals("$.repositories[0].description", TestRepository.DESCRIPTION).and()
+      .assertEquals("$.repositories[0].diagramType", DiagramType.CLASS.getType()).and()
+      .assertEquals("$.repositories[0].successRate", 1.0).and()
+      .assertEquals("$.repositories[0].failRate", 0.0).and()
       .assertEquals("$.repositories[0].files", Collections.<ImportFile>emptyList()); 
   }
   
@@ -69,14 +76,17 @@ public class ConsistentsTest {
   public void toJsonImportFile() {
     repos.forEach(r -> {
       final ConsistentRepositoryBuilder rbld = bld.withRepository(r);
+      
       r.getImports().forEach(e -> {
         try {
           e.get();
           rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
         } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), Throwables.getStackTraceAsString(ex));
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ex.getMessage());
         }
       });
+      
+      rbld.withCalculatedSuccessRate();
     });
     
     final ImportRepositorySet fromBld = bld.getRepositorySet();
@@ -88,10 +98,16 @@ public class ConsistentsTest {
       
       for (int i = 0; i < r.getFiles().size(); ++i) {
         final ImportFile file = r.getFile(i);
-        jassert.assertEquals(String.format(START, i) + ".path", file.getPath()).and()
-          .assertEquals(String.format(START, i) + ".type", file.getImportType().getName()).and()
-          .assertEquals(String.format(START, i) + ".successful", file.isSuccessful()).and()
-          .assertEquals(String.format(START, i) + ".message", file.getMessage());
+        final String path = String.format(START, i);
+        jassert.assertEquals(path + ".path", file.getPath()).and()
+          .assertEquals(path + ".type", file.getImportType().getName()).and()
+          .assertEquals(path + ".successful", file.isSuccessful());
+        if (file.isSuccessful()) {
+          jassert.assertNotDefined(path + ".message");
+        } else {
+          jassert.assertEquals(path + ".message", file.getMessage());
+        }
+          
       }
     });
     

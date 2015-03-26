@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.name.Named;
 
-import cruise.umple.sample.downloader.ImportType;
+import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.sample.downloader.Repository;
 
 /**
@@ -36,7 +36,7 @@ public interface ImportEntityFactory {
    */
   @Named("String")
   public ImportEntity createStringEntity(Repository repository, Path path, 
-      ImportType fileType, String content);
+      UmpleImportType fileType, String content);
   
   /**
    * Creates an {@link ImportEntity} that returns the result of a {@link Supplier} every time. 
@@ -52,7 +52,7 @@ public interface ImportEntityFactory {
    * @since Mar 2, 2015
    */
   @Named("String")
-  public ImportEntity createStringEntity(Repository repository, Path path, ImportType fileType, Supplier<String> content);
+  public ImportEntity createStringEntity(Repository repository, Path path, UmpleImportType fileType, Supplier<String> content);
   
   /**
    * Creates an {@link ImportEntity} that returns the result of downloading the {@link URL} instance.
@@ -67,5 +67,5 @@ public interface ImportEntityFactory {
    * @since Mar 2, 2015
    */
   @Named("URL")
-  public ImportEntity createUrlEntity(Repository repository, Path path, ImportType fileType, URL url);
+  public ImportEntity createUrlEntity(Repository repository, Path path, UmpleImportType fileType, URL url);
 }

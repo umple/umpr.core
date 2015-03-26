@@ -5,8 +5,10 @@ package cruise.umple.sample.downloader.consistent;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.nio.file.Path;
 import java.sql.Date;
 import java.sql.Time;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 import com.google.inject.assistedinject.Assisted;
@@ -29,15 +31,26 @@ public class ConsistentsBuilder {
   
   private final ImportRepositorySet repositorySet;
   
+  private static final Function<Path, String> PATH_TRANSFORM = (path) -> {
+    if (path == null) {
+      return null;
+    } 
+    
+    return path.toAbsolutePath().normalize().toString();
+  };
+  
   @AssistedInject
-  ConsistentsBuilder(Logger log, ConsistentsFactory factory, @Assisted final String rootPath) {  
+  ConsistentsBuilder(Logger log, ConsistentsFactory factory, 
+      @Assisted("umple") final Path umplePath, 
+      @Assisted("src") final Path srcPath) {  
     this.log = log;
     this.factory = factory;
     
-    checkNotNull(rootPath);
+    checkNotNull(umplePath);
 
-    final long now = System.currentTimeMillis();
-    this.repositorySet = new ImportRepositorySet(new Date(now), new Time(now), rootPath);
+    final long now = System.currentTimeMillis(); 
+    this.repositorySet = new ImportRepositorySet(new Date(now), new Time(now), PATH_TRANSFORM.apply(umplePath));
+    this.repositorySet.setSrcPath(PATH_TRANSFORM.apply(srcPath));
     
     log.finer("Created ConsistentsBuilder: " + this.repositorySet);
   }
@@ -69,7 +82,8 @@ public class ConsistentsBuilder {
     
     log.finest("Adding repository: " + repository);
     
-    return factory.createReposBuilder(this, repository.getName(), repository.getDescription(), this.repositorySet);
+    return factory.createReposBuilder(this, repository.getName(), repository.getDiagramType(), 
+        repository.getDescription(), this.repositorySet);
   }
   
   

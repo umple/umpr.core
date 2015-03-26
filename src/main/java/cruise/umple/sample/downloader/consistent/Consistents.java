@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.base.Throwables;
+import com.google.common.base.Strings;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
@@ -33,6 +34,10 @@ public abstract class Consistents {
   
   @Inject
   private static ConsistentsFactory CONSISTENTS_FACTORY;
+  
+  @SuppressWarnings("unused")
+  @Inject
+  private static Logger logger;
   
   private static final SimpleModule jsonModule;
   static {
@@ -62,25 +67,29 @@ public abstract class Consistents {
    * @param allData {@link List} of {@link ImportRuntimeData} to map into new the consistent data structures. 
    * @return Non-{@code null} instance
    */
-  public static ImportRepositorySet buildImportRepositorySet(final Path outputFolder, 
-                                                             final List<ImportRuntimeData> allData) {
-    final Multimap<Repository, ImportRuntimeData> dataByRepo = Multimaps.index(allData, 
-                                                                               ImportRuntimeData::getRepository);
+  public static ImportRepositorySet buildImportRepositorySet(final Path outputFolder,
+                                                             final Path srcFolder, 
+                                                             final Iterable<? extends ImportRuntimeData> allData) {
     
-    final ConsistentsBuilder cbld = CONSISTENTS_FACTORY.create(outputFolder.toAbsolutePath().toString());
+    final Multimap<Repository, ? extends ImportRuntimeData> dataByRepo = Multimaps.index(allData, 
+                                                                                         ImportRuntimeData::getRepository);
+    
+    final ConsistentsBuilder cbld = CONSISTENTS_FACTORY.create(outputFolder, srcFolder);
     dataByRepo.asMap().entrySet().forEach(entry -> {
         final Repository key = entry.getKey();
         final ConsistentRepositoryBuilder repoBld = cbld.withRepository(key);
-        final Path repoPath = outputFolder.resolve("./" + key.getName()).normalize();
-        entry.getValue().forEach(data -> {
-          final String outpath = repoPath.relativize(data.getOutputPath()).normalize().toString();
+        
+        entry.getValue().forEach( data -> {
+          final Path outpath = data.getOutputPath().getFileName();
           if (data.isSuccessful()) {
-            repoBld.addSuccessFile(outpath, data.getImportType());
+            repoBld.addSuccessFile(outpath.toString(), data.getImportType());
           } else {
-            repoBld.addFailedFile(outpath, data.getImportType(), 
-                Throwables.getStackTraceAsString(data.getFailure().get()));
+            repoBld.addFailedFile(outpath.toString(), data.getImportType(), 
+                data.getFailure().get().getMessage());
           }
         });
+        
+        repoBld.withCalculatedSuccessRate();
       });
     
     return cbld.getRepositorySet();
@@ -123,8 +132,11 @@ public abstract class Consistents {
       gen.writeNumberField("date", value.getDate().getTime());
       gen.writeNumberField("time", value.getTime().getTime());
       
-      gen.writeStringField("rootPath", value.getRootPath());
-      
+      gen.writeStringField("umple", value.getUmplePath());
+      if (!Strings.isNullOrEmpty(value.getSrcPath())) {
+        gen.writeStringField("src", value.getSrcPath());
+      }
+           
       gen.writeArrayFieldStart("repositories");
       final JsonSerializer<Object> repoSrlzr = serializers.findValueSerializer(ImportRepository.class);
       for (ImportRepository r: value.getRepositories()) {
@@ -153,6 +165,9 @@ public abstract class Consistents {
       gen.writeStringField("path", value.getPath());
       gen.writeStringField("description", value.getDescription());
       gen.writeStringField("name", value.getName());
+      gen.writeStringField("diagramType", value.getDiagramType().getType());
+      gen.writeNumberField("successRate", value.getSuccessRate());
+      gen.writeNumberField("failRate", value.getFailRate());
       
       gen.writeArrayFieldStart("files");
       final JsonSerializer<Object> fileSrlzr = serializers.findValueSerializer(ImportFile.class);
@@ -183,7 +198,10 @@ public abstract class Consistents {
       gen.writeStringField("path", value.getPath());
       gen.writeStringField("type", value.getImportType().getName());
       gen.writeBooleanField("successful", value.getSuccessful());
-      gen.writeStringField("message", value.getMessage());
+      
+      if (!Strings.isNullOrEmpty(value.getMessage())) {
+        gen.writeStringField("message", value.getMessage());
+      }
       
       gen.writeEndObject();
     }
