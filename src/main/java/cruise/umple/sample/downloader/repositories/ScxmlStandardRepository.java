@@ -100,14 +100,20 @@ public class ScxmlStandardRepository implements Repository {
                 final Elements outerDiv = examples.select(selector);
                 final String title = outerDiv.select(".exampleHeader").text();
                 final int exampleIdx = title.indexOf("Example:");
-//                final String content = outerDiv.select(".exampleInner pre").text();
                 
                 if (exampleIdx == -1) {
                   logger.severe("Failed to load " + selector + ", content: " + examples.toString());
                   throw new IllegalStateException("selector failed: " + selector);
                 }
                 
-                return new Example(title.substring(exampleIdx + "Example:".length()).trim(), 
+                String path = title.substring(exampleIdx + "Example:".length()).trim().replaceAll("\\s+", "-");
+                if (!path.endsWith(".scxml")) {
+                  path = path + ".scxml";
+                }
+                
+//                final String content = outerDiv.select(".exampleInner pre").text();
+
+                return new Example(path, 
                     () -> outerDiv.select(".exampleInner pre").text());
               })
               .map(e -> {
@@ -118,6 +124,6 @@ public class ScxmlStandardRepository implements Repository {
 
   @Override
   public boolean isAccessible() {
-      return Networks.ping(REPO_URL, 30 * 1000);
+      return Networks.ping(REPO_URL, 5 * 1000);
   }
 }

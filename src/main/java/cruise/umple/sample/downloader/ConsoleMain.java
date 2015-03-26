@@ -10,12 +10,14 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.beust.jcommander.JCommander;
@@ -48,6 +50,10 @@ public class ConsoleMain {
     @Parameter(names={"-l", "--limit"}, description = "Number of imports to download in total, " +
             "no guarentees to which repositories are used")
     Integer limit = -1;
+    
+    @Parameter(names={"--override"}, description="Force overriding of the output folders, "
+        + "i.e. remove output folder contents.")
+    Boolean override = false;
 
     Config() { 
       try {
@@ -97,10 +103,10 @@ public class ConsoleMain {
     main.run(cfg);
   }
   
-  private static final void replaceDirectory(final Path src, final Path dest) {
+  private static final void removeDirectory(final Path path) {
     try {
-      if (dest.toFile().exists()) {
-        Files.walkFileTree(dest, new SimpleFileVisitor<Path>() {
+      if (path.toFile().exists()) {
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file,
               BasicFileAttributes attrs) throws IOException {
@@ -120,12 +126,50 @@ public class ConsoleMain {
             }
           }
         });
-        Files.deleteIfExists(dest);
+        
+        Files.deleteIfExists(path);
       }
-      
-      Files.move(src, dest);
     } catch (IOException ioe) {
       throw Throwables.propagate(ioe);
+    }
+  }
+  
+  private static void mergeDirs(final Config cfg, final Path src, final Path dest) {
+
+    try {
+      Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
+          
+          final Path outputPath = dest;
+          
+          @Override
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            final Path relative = src.relativize(dir);
+            final Path fixed = outputPath.resolve(relative);
+            final File fdir = fixed.toFile();
+            
+            fdir.mkdirs();
+            
+            return FileVisitResult.CONTINUE;
+          }
+          
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            final Path relative = src.relativize(file);
+            final Path fixed = outputPath.resolve(relative);
+            final File ffile = fixed.toFile();
+            
+            if (ffile.exists()) {
+              ffile.delete();
+            }
+            
+            Files.move(file, fixed);
+            
+            return FileVisitResult.CONTINUE;
+          }
+
+        });
+    } catch (IOException ioe) {
+      Throwables.propagate(ioe);
     }
   }
  
@@ -169,13 +213,37 @@ public class ConsoleMain {
         urls = urls.limit(cfg.limit);
     }
     
-    final Set<ImportFSM> allData = urls.parallel() //Path aOutputPath, UmpleImportType aImportType, Supplier<String> aInputFunction, Repository aRepository
+    final Set<ImportFSM> allData = urls.parallel() 
         .map(tr -> new ImportFSM(Paths.get(workingDir.toString(), tr.getRepository().getName(), tr.getPath().toString()),
                                  tr.getImportType(), tr, tr.getRepository()))
         .collect(Collectors.toSet());
     
-    replaceDirectory(workingDir, cfg.outputFolder.toPath());
-    replaceDirectory(importWorkingDir, cfg.importFileFolder.toPath());
+    // write the import files to the import working directory
+    final EnumSet<ImportFSM.State> IMPORT_SUCCESS = EnumSet.complementOf(EnumSet.of(ImportFSM.State.Fetch));
+    allData.stream().filter(fsm -> IMPORT_SUCCESS.contains(fsm.getState())).forEach(fsm -> {
+      final Path rel = workingDir.relativize(fsm.getOutputPath());
+      final Path imp = importWorkingDir.resolve(rel);
+      try {
+        FileUtils.write(imp.toFile(), fsm.getInputContent().get());
+      } catch (IOException ioe) {
+        throw Throwables.propagate(ioe);
+      }
+    });
+    
+    
+    if (cfg.override) {
+      if (cfg.outputFolder.exists()) {
+        removeDirectory(cfg.outputFolder.toPath());
+      }
+      
+      if (cfg.importFileFolder.exists()) {
+        removeDirectory(cfg.importFileFolder.toPath());
+      }
+    }
+    
+    
+    mergeDirs(cfg, workingDir, cfg.outputFolder.toPath());
+    mergeDirs(cfg, importWorkingDir, cfg.importFileFolder.toPath());
     
     logger.info("Saved Umple files to: " + cfg.outputFolder.getPath());
     

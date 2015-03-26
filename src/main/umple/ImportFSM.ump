@@ -62,7 +62,7 @@ class ImportFSM {
   internal String umpleContent = null;
   
   immutable Supplier<String> inputFunction;
-  internal String inputContent = null;
+  Optional<String> inputContent = Optional.empty();
   
   immutable Repository repository;
   
@@ -82,7 +82,7 @@ class ImportFSM {
    */
   private void doFetch() {
     try {
-      inputContent = inputFunction.get();
+      inputContent = Optional.of(inputFunction.get());
     } catch (Throwable t) {
       // we do this because the input function could theoretically fail
       failure = Optional.of(t);
@@ -98,7 +98,7 @@ class ImportFSM {
     UmpleImportHandler handler = UmpleImportHandlerFactory.create(importType);
     
     this.logger.fine("Importing for " + this.getOutputPath());
-    try (InputStream in = IOUtils.toInputStream(inputContent, Charsets.UTF_8)) {
+    try (InputStream in = IOUtils.toInputStream(inputContent.get(), Charsets.UTF_8)) {
       final UmpleImportModel model = handler.readDataFromXML(in);
       if (handler.isSuccessful()) {
         umpleContent = model.generateUmple();
@@ -114,7 +114,7 @@ class ImportFSM {
    * Model the imported umple data
    */
   private void doModel() {
-    final File file = new File(getOutputPath().toString());
+    final File file = new File(getOutputPath().toString() + ".ump");
                 
     try {
       try {
