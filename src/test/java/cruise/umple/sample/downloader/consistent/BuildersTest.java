@@ -15,7 +15,6 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
@@ -76,7 +75,7 @@ public class BuildersTest {
           e.get();
           rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
         } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), Throwables.getRootCause(ex).toString());
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ex);
         }
       });
     });

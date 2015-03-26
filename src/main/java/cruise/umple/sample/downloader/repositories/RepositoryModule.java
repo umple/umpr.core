@@ -16,5 +16,6 @@ public class RepositoryModule implements Module {
       Multibinder<Repository> mbinder = Multibinder.newSetBinder(binder, Repository.class);
 
       mbinder.addBinding().to(AtlanZooRepository.class);
+      mbinder.addBinding().to(ScxmlStandardRepository.class);
     }
 }

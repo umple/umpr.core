@@ -85,7 +85,7 @@ public abstract class Consistents {
             repoBld.addSuccessFile(outpath.toString(), data.getImportType());
           } else {
             repoBld.addFailedFile(outpath.toString(), data.getImportType(), 
-                data.getFailure().get().getMessage());
+                data.getFailure().get());
           }
         });
         

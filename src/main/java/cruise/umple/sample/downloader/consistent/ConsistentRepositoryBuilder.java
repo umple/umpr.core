@@ -4,6 +4,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.logging.Logger;
 
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
@@ -87,10 +89,15 @@ public class ConsistentRepositoryBuilder {
    * @see #addSuccessFile(String, String)
    */
   public ConsistentRepositoryBuilder addFailedFile(final String path, final UmpleImportType fileType, 
-      final String errorMessage) {
-    log.finer("Adding failed file: path=" + path + ", type=" + fileType + ", error=" + errorMessage);
+      final Throwable error) {
+    log.finer("Adding failed file: path=" + path + ", type=" + fileType + ", error=" + error);
     
-    new ImportFile(path, fileType, false, errorMessage, importRepos);
+    String message = Throwables.getRootCause(error).getMessage();
+    if (Strings.isNullOrEmpty(message)) {
+      message = error.toString();
+    }
+     
+    new ImportFile(path, fileType, false, message, importRepos);
     
     return this;
   }

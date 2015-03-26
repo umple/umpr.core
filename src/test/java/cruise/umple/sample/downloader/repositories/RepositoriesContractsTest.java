@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import cruise.umple.sample.downloader.DownloaderModule;
@@ -47,8 +48,7 @@ public class RepositoriesContractsTest {
     @Test
     public void checkNames() {
       for (Repository r : allRepositories) {
-        assertNotNull(r.getName(), "Repository had a null name.");
-        assertFalse(r.getName().isEmpty(), "Repository had an empty name.");
+        assertFalse(Strings.isNullOrEmpty(r.getName()), "Repository had a null name.");
       }
     }
     
