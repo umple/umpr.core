@@ -2,6 +2,7 @@ package cruise.umple.sample.downloader.consistent;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Set;
@@ -17,6 +18,7 @@ import com.jayway.jsonassert.JsonAssert;
 import com.jayway.jsonassert.JsonAsserter;
 
 import cruise.umple.sample.downloader.DiagramType;
+import cruise.umple.sample.downloader.ImportFSM;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.repositories.TestRepository;
 import cruise.umple.sample.downloader.util.MockModule;
@@ -37,9 +39,11 @@ public class ConsistentsTest {
     this.repos = repos;
   }
   
+  private Path TEST_UMP_DIR;
   @BeforeMethod
   public void setup() throws IOException {
-    bld = factory.create(Paths.get("."), Files.createTempDirectory("TEST_"));
+    TEST_UMP_DIR = Files.createTempDirectory("TEST_UMP_");
+    bld = factory.create(TEST_UMP_DIR, Files.createTempDirectory("TEST_SRC_"));
   }
  
   @Test
@@ -78,16 +82,18 @@ public class ConsistentsTest {
       final ConsistentRepositoryBuilder rbld = bld.withRepository(r);
       
       r.getImports().forEach(e -> {
-        try {
-          e.get();
-          rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
-        } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ex);
+        final ImportFSM fsm = new ImportFSM(Paths.get(TEST_UMP_DIR.toString(), r.getName(), e.getPath().toString()), 
+            e.getImportType(), e, e.getRepository());
+        
+        if (fsm.isSuccessful()) {
+          rbld.addSuccessFile(fsm.getOutputPath().toString(), fsm.getImportType());
+        } else {
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), fsm.getState(), fsm.getFailure().get());
         }
       });
       
       rbld.withCalculatedSuccessRate();
-    });
+    }); 
     
     final ImportRepositorySet fromBld = bld.getRepositorySet();
     final String json = Consistents.toJson(fromBld);
@@ -101,13 +107,14 @@ public class ConsistentsTest {
         final String path = String.format(START, i);
         jassert.assertEquals(path + ".path", file.getPath()).and()
           .assertEquals(path + ".type", file.getImportType().getName()).and()
-          .assertEquals(path + ".successful", file.isSuccessful());
+          .assertEquals(path + ".successful", file.isSuccessful()).and()
+          .assertEquals(path + ".lastState", file.getLastState().toString());
+        
         if (file.isSuccessful()) {
           jassert.assertNotDefined(path + ".message");
         } else {
           jassert.assertEquals(path + ".message", file.getMessage());
-        }
-          
+        }   
       }
     });
     

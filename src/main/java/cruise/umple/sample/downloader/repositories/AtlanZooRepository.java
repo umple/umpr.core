@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -83,7 +84,7 @@ class AtlanZooRepository implements Repository {
                     try {
                         return new URL(e.attr("href"));
                     } catch (MalformedURLException mue) {
-                        throw new IllegalArgumentException(mue);
+                        throw Throwables.propagate(mue);
                     }
                 })
                 .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), UmpleImportType.ECORE, url))

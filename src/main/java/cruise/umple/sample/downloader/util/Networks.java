@@ -104,7 +104,7 @@ public abstract class Networks {
           log.warning("URLSupplier#get() failed with exception");
           log.warning(Throwables.getStackTraceAsString(ioe));
           
-          throw new IllegalStateException(ioe);
+          throw Throwables.propagate(ioe);
         }
       }
       

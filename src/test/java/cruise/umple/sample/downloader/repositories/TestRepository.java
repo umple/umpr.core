@@ -23,6 +23,8 @@ import com.google.inject.Singleton;
 
 import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.sample.downloader.DiagramType;
+import cruise.umple.sample.downloader.ImportFSM;
+import cruise.umple.sample.downloader.ImportFSM.State;
 import cruise.umple.sample.downloader.Repository;
 import cruise.umple.sample.downloader.entities.ImportEntity;
 import cruise.umple.sample.downloader.entities.ImportEntityFactory;
@@ -49,9 +51,17 @@ public class TestRepository implements Repository {
   public static final List<String> ECORE_FILES = ImmutableList.<String>builder()
       .add("bibtex.ecore")
       .add("ocl-operations.ecore")
-      .add("sharengo.ecore")
-      .add("intentional-failure.ecore")
+      .add("sharengo.import-failure.ecore")
+      .add("intentional-failure.ecore") // fail on fetch
       .add("adelfe.model-failure.ecore")
+      .build();
+  
+  public static final Map<String, ImportFSM.State> failStates = ImmutableMap.<String, ImportFSM.State>builder()
+      .put("bibtex.ecore", State.Completed)
+      .put("ocl-operations.ecore", State.Completed)
+      .put("sharengo.import-failure.ecore", State.Import)
+      .put("intentional-failure.ecore", State.Fetch)
+      .put("adelfe.model-failure.ecore", State.Model)
       .build();
   
   public static final double SUCCESS_RATE;

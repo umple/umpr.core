@@ -2,19 +2,26 @@ namespace cruise.umple.sample.downloader.consistent;
 
 class ImportFile {
   depend cruise.umple.compiler.UmpleImportType;
+  depend cruise.umple.sample.downloader.ImportFSM;
+  depend cruise.umple.sample.downloader.ImportFSM.State;
 
   immutable String path;
   
   immutable UmpleImportType importType;
   
-  immutable Boolean successful;
+  immutable State lastState;
   
   immutable String message;
+  
+  Boolean isSuccessful() {
+    return getLastState() == ImportFSM.State.Completed;
+  }
 }
 
 class ImportRepository {
   depend cruise.umple.sample.downloader.DiagramType;
   depend cruise.umple.compiler.UmpleImportType;
+  depend cruise.umple.sample.downloader.ImportFSM.State;
   
   immutable String name;
   immutable String description;
