@@ -1,9 +1,9 @@
-namespace cruise.umple.sample.downloader.consistent;
+namespace cruise.umple.umpr.core.consistent;
 
 class ImportFile {
   depend cruise.umple.compiler.UmpleImportType;
-  depend cruise.umple.sample.downloader.ImportFSM;
-  depend cruise.umple.sample.downloader.ImportFSM.State;
+  depend cruise.umple.umpr.core.ImportFSM;
+  depend cruise.umple.umpr.core.ImportFSM.State;
 
   immutable String path;
   
@@ -19,9 +19,9 @@ class ImportFile {
 }
 
 class ImportRepository {
-  depend cruise.umple.sample.downloader.DiagramType;
   depend cruise.umple.compiler.UmpleImportType;
-  depend cruise.umple.sample.downloader.ImportFSM.State;
+  depend cruise.umple.umpr.core.DiagramType;
+  depend cruise.umple.umpr.core.ImportFSM.State;
   
   immutable String name;
   immutable String description;
@@ -46,7 +46,7 @@ class ImportRepository {
 }
 
 class ImportRepositorySet {
-  depend cruise.umple.sample.downloader.DiagramType;
+  depend cruise.umple.umpr.core.DiagramType;
   
   immutable Date date;
   immutable Time time;

@@ -1,4 +1,4 @@
-namespace cruise.umple.sample.downloader;
+namespace cruise.umple.umpr.core;
 
 /**
  * Import State machine for running imports. 
@@ -24,7 +24,7 @@ class ImportFSM {
   depend cruise.umple.compiler.UmpleModel;
   depend cruise.umple.compiler.UmpleImportType;
   
-  depend cruise.umple.sample.downloader.Repository;
+  depend cruise.umple.umpr.core.Repository;
   
   state {
     Fetch {
