@@ -17,5 +17,6 @@ public class RepositoryModule implements Module {
 
       mbinder.addBinding().to(AtlanZooRepository.class);
       mbinder.addBinding().to(ScxmlStandardRepository.class);
+      mbinder.addBinding().to(Iso20022EcoreRepository.class);
     }
 }

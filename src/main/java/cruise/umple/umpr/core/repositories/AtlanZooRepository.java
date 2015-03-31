@@ -78,7 +78,7 @@ class AtlanZooRepository implements Repository {
         Elements top = doc.get().select("div#bodyContent p + ul");
 
         return top.stream()
-                .map(e -> e.select("li a"))
+                .map(e -> e.select("li a")) 
                 .flatMap(List::stream)
                 .map(e -> {
                     try {

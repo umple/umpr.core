@@ -1,13 +1,11 @@
 package cruise.umple.umpr.core.repositories;
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -17,7 +15,6 @@ import com.google.inject.Inject;
 
 import cruise.umple.umpr.core.DownloaderModule;
 import cruise.umple.umpr.core.Repository;
-import cruise.umple.umpr.core.entities.ImportEntity;
 import cruise.umple.umpr.core.util.Pair;
 
 /**
@@ -83,21 +80,16 @@ public class RepositoriesContractsTest {
      */
     @Test
     public void checkURLs() {
-      logger.fine("Running Repository tests, these may take time depending on internet connection and repositories.");
-      for (Repository r : allRepositories) {
-        logger.finest("Repository: " + r.getName());
-        
-        Stream<ImportEntity> imports = r.getImports();
-        assertNotNull(imports, "urls response was null");
-        
-        imports.forEach(ie -> {
-          assertNotNull(ie, "ImportEntity was null");
-          assertEquals(ie.getRepository(), r, "Import from Repository, " + r.getName() + ", do not have proper Repository set");
-          assertNotNull(ie.getPath(), "Import path from Repository, " + r.getName() + ", was null.");
-          assertNotNull(ie.get(), "Import InputStream from Repository, " + r.getName() + ", was null.");
-          assertNotNull(ie.getImportType(), "ImportEntity::getImportType() from Repository, " + r.getName() + ", was null.");
-        });
-      }
+      logger.info("Running Repository tests, these may take time depending on internet connection and repositories.");
+      
+      // Run everything in parallel, this operation is already *really* slow. 
+      allRepositories.stream().flatMap(Repository::getImports).parallel().forEach(ie -> {
+        assertNotNull(ie, "ImportEntity was null");
+        assertNotNull(ie.getRepository(), "ImportEntity::getRepository was null");
+        assertNotNull(ie.getPath(), "ImportEntity::getPath was null (Repository:" + ie.getRepository() + ").");
+        assertNotNull(ie.getImportType(), "ImportEntity::getImportType was null (Repository:" + ie.getRepository() + ").");
+        assertNotNull(ie.get(), "ImportEntity::get was null (Repository:" + ie.getRepository() + ").");
+      });
     }
   
 }
