@@ -1,4 +1,4 @@
-namespace cruise.umple.sample.downloader;
+namespace cruise.umple.umpr.core;
 
 /**
  * ImportType is a "enumeration" of information for what type of 
