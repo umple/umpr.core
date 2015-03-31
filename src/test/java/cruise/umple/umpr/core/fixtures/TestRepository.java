@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
@@ -139,8 +140,8 @@ public class TestRepository implements Repository {
    * @see cruise.umple.sample.downloader.Repository#getImports()
    */
   @Override
-  public List<ImportEntity> getImports() {
-    return entities;
+  public Stream<ImportEntity> getImports() {
+    return entities.stream();
   }
 
   /* (non-Javadoc)

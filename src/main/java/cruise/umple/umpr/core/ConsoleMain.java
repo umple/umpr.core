@@ -206,8 +206,7 @@ public class ConsoleMain {
 
     Stream<ImportEntity> urls = repos.filter(Repository::isAccessible)
             .peek(r -> this.logger.config("Loading Repository: " + r.getName()))
-            .map(Repository::getImports)
-            .flatMap(List::stream);
+            .flatMap(Repository::getImports);
 
     if (cfg.limit > -1) {
         urls = urls.limit(cfg.limit);

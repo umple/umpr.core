@@ -4,12 +4,11 @@
 package cruise.umple.umpr.core.repositories;
 
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -85,7 +84,7 @@ public class ScxmlStandardRepository implements Repository {
   }
 
   @Override
-  public List<ImportEntity> getImports() {
+  public Stream<ImportEntity> getImports() {
       Optional<Document> odoc = documentFactory.fromURL(REPO_URL);
 
       if (!odoc.isPresent()) {
@@ -118,8 +117,7 @@ public class ScxmlStandardRepository implements Repository {
               })
               .map(e -> {
                   return entityFactory.createStringEntity(this, Paths.get(e.name), UmpleImportType.SCXML, e.content);
-              })
-              .collect(Collectors.toList());
+              });
   }
 
   @Override

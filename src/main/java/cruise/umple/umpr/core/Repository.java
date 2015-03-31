@@ -1,6 +1,6 @@
 package cruise.umple.umpr.core;
 
-import java.util.List;
+import java.util.stream.Stream;
 
 import cruise.umple.umpr.core.entities.ImportEntity;
 
@@ -33,9 +33,9 @@ public interface Repository {
     /**
      * Get a list of URL instances where the import files may be stored.
      *
-     * @return Non-{@code null}, possibly empty list of {@link ImportEntity} instances
+     * @return Non-{@code null}, possibly empty {@link Stream} of {@link ImportEntity} instances
      */
-    public List<ImportEntity> getImports();
+    public Stream<ImportEntity> getImports();
 
     /**
      * Checks if the repository is accessible.

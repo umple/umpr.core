@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -67,7 +67,7 @@ class AtlanZooRepository implements Repository {
     }
 
     @Override
-    public List<ImportEntity> getImports() {
+    public Stream<ImportEntity> getImports() {
         Optional<Document> doc = documentFactory.fromURL(REPO_URL);
 
         if (!doc.isPresent()) {
@@ -87,8 +87,7 @@ class AtlanZooRepository implements Repository {
                         throw Throwables.propagate(mue);
                     }
                 })
-                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), UmpleImportType.ECORE, url))
-                .collect(Collectors.toList());
+                .map(url -> entityFactory.createUrlEntity(this, Paths.get(url.getPath()), UmpleImportType.ECORE, url));
     }
 
     @Override

@@ -5,9 +5,9 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -87,16 +87,16 @@ public class RepositoriesContractsTest {
       for (Repository r : allRepositories) {
         logger.finest("Repository: " + r.getName());
         
-        List<ImportEntity> imports = r.getImports();
+        Stream<ImportEntity> imports = r.getImports();
         assertNotNull(imports, "urls response was null");
         
-        for (final ImportEntity ie : imports) {
+        imports.forEach(ie -> {
           assertNotNull(ie, "ImportEntity was null");
           assertEquals(ie.getRepository(), r, "Import from Repository, " + r.getName() + ", do not have proper Repository set");
           assertNotNull(ie.getPath(), "Import path from Repository, " + r.getName() + ", was null.");
           assertNotNull(ie.get(), "Import InputStream from Repository, " + r.getName() + ", was null.");
           assertNotNull(ie.getImportType(), "ImportEntity::getImportType() from Repository, " + r.getName() + ", was null.");
-        }
+        });
       }
     }
   
