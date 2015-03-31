@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cruise.umple.umpr.core.repositories;
+package cruise.umple.umpr.core.fixtures;
 
 import java.io.IOException;
 import java.net.URL;

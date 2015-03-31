@@ -21,8 +21,8 @@ import com.google.inject.Inject;
 import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.umpr.core.ImportFSM;
 import cruise.umple.umpr.core.Repository;
-import cruise.umple.umpr.core.repositories.TestRepository;
-import cruise.umple.umpr.core.util.MockModule;
+import cruise.umple.umpr.core.fixtures.MockModule;
+import cruise.umple.umpr.core.fixtures.TestRepository;
 
 @Guice(modules=MockModule.class)
 public class BuildersTest {

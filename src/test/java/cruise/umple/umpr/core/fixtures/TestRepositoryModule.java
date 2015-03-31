@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cruise.umple.umpr.core.repositories;
+package cruise.umple.umpr.core.fixtures;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;

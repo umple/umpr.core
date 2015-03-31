@@ -14,8 +14,8 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-import cruise.umple.umpr.core.repositories.TestRepository;
-import cruise.umple.umpr.core.util.MockModule;
+import cruise.umple.umpr.core.fixtures.MockModule;
+import cruise.umple.umpr.core.fixtures.TestRepository;
 
 /**
  * Created by kevin on 15-02-23.

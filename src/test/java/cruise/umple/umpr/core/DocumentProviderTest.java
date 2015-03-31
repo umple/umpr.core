@@ -16,7 +16,7 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 
-import cruise.umple.umpr.core.util.MockModule;
+import cruise.umple.umpr.core.fixtures.MockModule;
 
 /**
  * Test {@link RealDocumentFactory}.
