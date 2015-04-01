@@ -178,7 +178,7 @@ public class ConsoleMain {
 
         });
     } catch (IOException ioe) {
-      Throwables.propagate(ioe);
+      throw Throwables.propagate(ioe);
     }
   }
  
@@ -248,7 +248,6 @@ public class ConsoleMain {
         removeDirectory(cfg.importFileFolder.toPath());
       }
     }
-    
     
     mergeDirs(cfg, workingDir, cfg.outputFolder.toPath());
     mergeDirs(cfg, importWorkingDir, cfg.importFileFolder.toPath());
