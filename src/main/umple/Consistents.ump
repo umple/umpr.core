@@ -5,7 +5,7 @@ class ImportFile {
   depend cruise.umple.umpr.core.ImportFSM;
   depend cruise.umple.umpr.core.ImportFSM.State;
 
-  immutable String path;
+  String path;
   
   immutable UmpleImportType importType;
   
@@ -16,6 +16,8 @@ class ImportFile {
   Boolean isSuccessful() {
     return getLastState() == ImportFSM.State.Completed;
   }
+  
+  key { path }
 }
 
 class ImportRepository {
@@ -25,7 +27,7 @@ class ImportRepository {
   
   immutable String name;
   immutable String description;
-  immutable String path;
+  String path;
   immutable DiagramType diagramType;
   defaulted Double successRate = 1.0;
   defaulted Double failRate = 0.0;
@@ -43,6 +45,8 @@ class ImportRepository {
       setSuccessRate(1.0 - getFailRate());
     }
   }
+  
+  key { path }
 }
 
 class ImportRepositorySet {
@@ -51,9 +55,11 @@ class ImportRepositorySet {
   immutable Date date;
   immutable Time time;
   
-  immutable String umplePath;
+  String umplePath;
   defaulted String srcPath = null;
   
   1 -- * ImportRepository repositories;
+  
+  key { umplePath }
 
 }

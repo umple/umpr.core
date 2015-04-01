@@ -112,14 +112,26 @@ public class ConsoleMain {
     main.run(cfg);
   }
   
-  private static final void removeDirectory(final Path path) {
+  private static final void removeDirectoryContents(final Path path) {
     try {
       if (path.toFile().exists()) {
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
           @Override
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+            if (dir.toFile().isHidden()) {
+              return FileVisitResult.SKIP_SUBTREE;
+            } 
+            
+            return FileVisitResult.CONTINUE;
+          }
+          
+          @Override
           public FileVisitResult visitFile(Path file,
               BasicFileAttributes attrs) throws IOException {
-            Files.delete(file);
+            if (!file.toFile().isHidden()) {
+              Files.delete(file);
+            }
+            
             return FileVisitResult.CONTINUE;
           }
 
@@ -127,7 +139,10 @@ public class ConsoleMain {
           public FileVisitResult postVisitDirectory(Path dir, IOException e)
               throws IOException {
             if (e == null) {
-              Files.delete(dir);
+              if (!dir.equals(path)) {
+                Files.delete(dir);
+              }
+              
               return FileVisitResult.CONTINUE;
             } else {
               // directory iteration failed
@@ -135,8 +150,6 @@ public class ConsoleMain {
             }
           }
         });
-        
-        Files.deleteIfExists(path);
       }
     } catch (IOException ioe) {
       throw Throwables.propagate(ioe);
@@ -152,6 +165,11 @@ public class ConsoleMain {
           
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            if (dir.toFile().isHidden()) { 
+              // skip hidden directories
+              return FileVisitResult.SKIP_SUBTREE;
+            }
+            
             final Path relative = src.relativize(dir);
             final Path fixed = outputPath.resolve(relative);
             final File fdir = fixed.toFile();
@@ -241,11 +259,11 @@ public class ConsoleMain {
     
     if (cfg.override) {
       if (cfg.outputFolder.exists()) {
-        removeDirectory(cfg.outputFolder.toPath());
+        removeDirectoryContents(cfg.outputFolder.toPath());
       }
       
       if (cfg.importFileFolder.exists()) {
-        removeDirectory(cfg.importFileFolder.toPath());
+        removeDirectoryContents(cfg.importFileFolder.toPath());
       }
     }
     
