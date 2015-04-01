@@ -38,22 +38,25 @@ public class ConsoleMain {
   @Parameters
   static class Config {
 
-    @Parameter(names={"-import", "-i"}, description = "Folder to save import files to")
+    @Parameter(names={"--import", "-i"}, description = "Folder to save import files to")
     File importFileFolder;
 
     @Parameter(names={"-o", "--output"}, description = "Output folder for generated .ump files", required = true)
     File outputFolder;
 
-    @Parameter(description = "Repositories to download from, no entries implies download all.")
+    @Parameter(description = "[Repository1] [.. [RepositoryN]]")
     List<String> respositories = Collections.emptyList();
 
     @Parameter(names={"-l", "--limit"}, description = "Number of imports to download in total, " +
-            "no guarentees to which repositories are used")
-    Integer limit = -1;
+            "there are no guarantees to which repositories are used or what order. (-1 implies no limit)")
+    int limit = -1;
     
-    @Parameter(names={"--override"}, description="Force overriding of the output folders, "
+    @Parameter(names={"-O", "--override"}, description="Force overriding of the output folders, "
         + "i.e. remove output folder contents.")
-    Boolean override = false;
+    boolean override = false;
+    
+    @Parameter(names = {"-h", "-?", "--help"}, help = true, description="Print help message.")
+    boolean help;
 
     Config() { 
       try {
@@ -93,7 +96,13 @@ public class ConsoleMain {
 
   public static void main(String[] args) throws IOException {
     Config cfg = new Config();
-    new JCommander(cfg, args);
+    JCommander jc = new JCommander(cfg, args);
+    
+    if (cfg.help) {
+      jc.usage();
+      
+      return;
+    }
 
     System.out.println(cfg.toString());
 

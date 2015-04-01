@@ -69,7 +69,7 @@ public class ConsoleMainTest {
         Set<?> data = main.run(cfg);
         int count = data.size();
 
-        Assert.assertEquals(count, cfg.limit.intValue(), "Did not limit files to " + cfg.limit);
+        Assert.assertEquals(count, cfg.limit, "Did not limit files to " + cfg.limit);
     }
 
     /**
