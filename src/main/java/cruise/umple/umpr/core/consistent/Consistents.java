@@ -5,25 +5,41 @@ package cruise.umple.umpr.core.consistent;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 
+import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.umpr.core.ConsoleMain;
+import cruise.umple.umpr.core.DiagramType;
 import cruise.umple.umpr.core.ImportFSM;
 import cruise.umple.umpr.core.Repository;
+import cruise.umple.umpr.core.consistent.ConsistentsModule.ConsistentsJacksonConfig;
 
 /**
  * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
@@ -39,23 +55,8 @@ public abstract class Consistents {
   @Inject
   private static Logger logger;
   
-  private static final SimpleModule jsonModule;
-  static {
-    // initialize the Jackson module
-    jsonModule = new SimpleModule();
-    jsonModule.addSerializer(ImportRepositorySet.class, new ImportRepositorySetSerializer());
-    jsonModule.addSerializer(ImportRepository.class, new ImportRepositorySerializer());
-    jsonModule.addSerializer(ImportFile.class, new ImportFileSerializer());
-  }
-  
-  /**
-   * {@link ObjectMapper} for mapping Java objects to Json
-   */
-  private static final ObjectMapper mapper = new ObjectMapper();
-  static {
-    mapper.registerModule(jsonModule);
-    mapper.enable(SerializationFeature.INDENT_OUTPUT);
-  }
+  @Inject @ConsistentsJacksonConfig // get the json config from the module
+  private static ObjectMapper mapper;
 
   private Consistents() { }
   
@@ -112,6 +113,32 @@ public abstract class Consistents {
     }    
   }
   
+  /**
+   * Reads an {@link InputStream} of JSON data and returns a new {@link ImportRepositorySet} instance. 
+   * @param stream input data (callers responsibility to close)
+   * @return Non-{@code null} instance, errors cause an exception. 
+   */
+  public static ImportRepositorySet fromJson(final InputStream stream) {
+    try {
+      return mapper.readValue(stream, ImportRepositorySet.class);     
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  
+  /**
+   * Reads an {@link String} of JSON data and returns a new {@link ImportRepositorySet} instance. 
+   * @param data input json {@link String}
+   * @return Non-{@code null} instance, errors cause an exception. 
+   */
+  public static ImportRepositorySet fromJson(final String data) {
+    try {
+      return mapper.readValue(data, ImportRepositorySet.class);     
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  
   
   /**
    * Converts an {@link ImportRepositorySet} to JSON
@@ -119,7 +146,7 @@ public abstract class Consistents {
    * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
    * @since 17 Mar 2015
    */
-  private static class ImportRepositorySetSerializer extends JsonSerializer<ImportRepositorySet> {
+  static class ImportRepositorySetSerializer extends JsonSerializer<ImportRepositorySet> {
 
     @Override
     public void serialize(ImportRepositorySet value, JsonGenerator gen,
@@ -153,7 +180,7 @@ public abstract class Consistents {
    * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
    * @since 17 Mar 2015
    */
-  private static class ImportRepositorySerializer extends JsonSerializer<ImportRepository> {
+  static class ImportRepositorySerializer extends JsonSerializer<ImportRepository> {
 
     @Override
     public void serialize(ImportRepository value, JsonGenerator gen,
@@ -186,7 +213,7 @@ public abstract class Consistents {
    * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
    * @since 17 Mar 2015
    */
-  private static class ImportFileSerializer extends JsonSerializer<ImportFile> {
+  static class ImportFileSerializer extends JsonSerializer<ImportFile> {
 
     @Override
     public void serialize(ImportFile value, JsonGenerator gen,
@@ -205,5 +232,105 @@ public abstract class Consistents {
       
       gen.writeEndObject();
     }
+  }
+  
+  static class ImportRepositorySetDeserializer extends JsonDeserializer<ImportRepositorySet> {
+    
+    private final Provider<ConsistentsFactory> factory;
+    
+    protected ImportRepositorySetDeserializer(Provider<ConsistentsFactory> factory) {
+      super();
+      
+      this.factory = factory;
+    }
+    
+    /**
+     * Read all of the public static fields and convert them to a map of NAME -> Field
+     * @param type
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> Map<String, T> getFakeEnumMapping(final Class<T> type) {
+      final List<Field> fields = Arrays.asList(type.getFields());
+
+      Map<String, T> outFields = fields.stream()
+          .filter(f -> Modifier.isStatic(f.getModifiers()) && Modifier.isPublic(f.getModifiers()) && f.getType() == type)
+          .collect(Collectors.toMap(f -> f.getName().toLowerCase(),
+              f -> {
+                try {
+                  return (T)f.get(null); 
+                } catch (IllegalAccessException | IllegalArgumentException e) {
+                  // CAN'T happen, we've filtered out the baddies.
+                  throw Throwables.propagate(e);
+                }
+              }));
+      
+      return ImmutableMap.copyOf(outFields);
+    }
+    
+    private final static Map<String, DiagramType> diagramMapping = getFakeEnumMapping(DiagramType.class);
+    private final static Map<String, UmpleImportType> importMapping = getFakeEnumMapping(UmpleImportType.class);
+
+    @Override
+    public ImportRepositorySet deserialize(JsonParser jp, DeserializationContext ctxt)
+        throws IOException, JsonProcessingException {
+      
+      ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+      ObjectNode root = (ObjectNode) mapper.readTree(jp);
+      
+      final String umplePath = root.findValue("umple").asText();
+      final String srcPath = root.findValue("src").asText();
+      
+      final ConsistentsBuilder bld = factory.get().create(Paths.get(umplePath), Paths.get(srcPath));
+      
+      final List<JsonNode> repos = root.findValues("repositories");
+      
+      repos.forEach(node -> {
+        /* {
+              "path" : "AtlanZooEcore",
+              "description" : "STRING",
+              "name" : "AtlanZooEcore",
+              "diagramType" : "class",
+              "successRate" : 0.5737704918032787,
+              "failRate" : 0.42622950819672134,
+              "files" : [ ... ]
+           } */
+        // read all the data points: 
+        final String description = node.findValue("description").asText();
+        final String name = node.findValue("name").asText();
+        final DiagramType diagramType = diagramMapping.get(node.findValue("diagramType").asText());
+        
+        final ConsistentRepositoryBuilder rbld = bld.withRepository(name, diagramType, description);
+        final List<JsonNode> files = node.findValues("files");
+        
+        // work through the file nodes individually
+        files.forEach(fnode -> {
+          /*  {
+                "path" : "Mantis.ecore",
+                "type" : "ECore",
+                "lastState" : "Completed",
+                "successful" : true
+              }
+           */
+          final UmpleImportType type = importMapping.get(fnode.findValue("type").asText().toLowerCase());
+          final String path = fnode.findValue("path").asText();
+          final ImportFSM.State lastState = ImportFSM.State.valueOf(fnode.findValue("lastState").asText());
+          final boolean successful = fnode.findValue("successful").asBoolean(false);
+          
+          // add the file
+          if (!successful) {
+            final String message = fnode.findValue("message").asText();
+            rbld.addFailedFile(path, type, lastState, message);
+          } else {
+            rbld.addSuccessFile(path, type);
+          }
+        });
+        
+        rbld.withCalculatedSuccessRate();
+      });
+      
+      return bld.getRepositorySet();     
+    }
+    
   }
 }

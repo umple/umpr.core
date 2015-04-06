@@ -91,15 +91,32 @@ public class ConsistentRepositoryBuilder {
    */
   public ConsistentRepositoryBuilder addFailedFile(final String path, final UmpleImportType fileType, 
       final ImportFSM.State state, final Throwable ex) {
-    log.finer("Adding failed file: path=" + path + ", type=" + fileType + ", error=" + ex);
-    
     String message = Throwables.getRootCause(ex).getMessage();
     if (Strings.isNullOrEmpty(message)) {
       message = ex.toString();
-      log.severe("Error importing model: " + Throwables.getStackTraceAsString(ex));
+      log.info("Error importing model: " + Throwables.getStackTraceAsString(ex));
     }
+    
      
-    new ImportFile(path, fileType, state, message, importRepos);
+    return addFailedFile(path, fileType, state, message);
+  }
+  
+  /**
+   * Add an unsuccessful file, the output path will likely not exist. 
+   * @param path 
+   * @param fileType
+   * @param ex Throwable with reason
+   * @return New not-{@code null} {@link ImportFile} instance. 
+   * 
+   * @since 11 Mar 2015
+   * 
+   * @see #addSuccessFile(String, String)
+   */
+  public ConsistentRepositoryBuilder addFailedFile(final String path, final UmpleImportType fileType, 
+      final ImportFSM.State state, final String failMsg) {
+    log.finer("Adding failed file: path=" + path + ", type=" + fileType + ", error=" + failMsg);
+
+    new ImportFile(path, fileType, state, failMsg, importRepos);
     
     return this;
   }

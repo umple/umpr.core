@@ -112,14 +112,32 @@ public class ConsoleMain {
     main.run(cfg);
   }
   
-  private static final void removeDirectory(final Path path) {
+  private static final void removeDirectoryContents(final Path path) {
+    final Set<Path> ignorePaths = getIgnorePaths(path);
+    
     try {
       if (path.toFile().exists()) {
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
           @Override
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+            if (dir.toFile().isHidden()) {
+              return FileVisitResult.SKIP_SUBTREE;
+            } 
+            
+            if (ignorePaths.contains(dir)) {
+              return FileVisitResult.SKIP_SUBTREE;
+            }
+            
+            return FileVisitResult.CONTINUE;
+          }
+          
+          @Override
           public FileVisitResult visitFile(Path file,
               BasicFileAttributes attrs) throws IOException {
-            Files.delete(file);
+            if (!file.toFile().isHidden() && !ignorePaths.contains(file)) {
+              Files.delete(file);
+            }
+            
             return FileVisitResult.CONTINUE;
           }
 
@@ -127,7 +145,10 @@ public class ConsoleMain {
           public FileVisitResult postVisitDirectory(Path dir, IOException e)
               throws IOException {
             if (e == null) {
-              Files.delete(dir);
+              if (!dir.equals(path)) {
+                Files.delete(dir);
+              }
+              
               return FileVisitResult.CONTINUE;
             } else {
               // directory iteration failed
@@ -135,8 +156,6 @@ public class ConsoleMain {
             }
           }
         });
-        
-        Files.deleteIfExists(path);
       }
     } catch (IOException ioe) {
       throw Throwables.propagate(ioe);
@@ -145,6 +164,8 @@ public class ConsoleMain {
   
   private static void mergeDirs(final Config cfg, final Path src, final Path dest) {
 
+    final Set<Path> ignorePaths = getIgnorePaths(dest);
+    
     try {
       Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
           
@@ -152,8 +173,18 @@ public class ConsoleMain {
           
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            if (dir.toFile().isHidden()) { 
+              // skip hidden directories
+              return FileVisitResult.SKIP_SUBTREE;
+            }
+            
             final Path relative = src.relativize(dir);
             final Path fixed = outputPath.resolve(relative);
+            
+            if (ignorePaths.contains(fixed)) {
+              return FileVisitResult.SKIP_SUBTREE;
+            }
+            
             final File fdir = fixed.toFile();
             
             fdir.mkdirs();
@@ -165,8 +196,11 @@ public class ConsoleMain {
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
             final Path relative = src.relativize(file);
             final Path fixed = outputPath.resolve(relative);
-            final File ffile = fixed.toFile();
+            if (ignorePaths.contains(fixed)) {
+              return FileVisitResult.SKIP_SUBTREE;
+            }
             
+            final File ffile = fixed.toFile();
             if (ffile.exists()) {
               ffile.delete();
             }
@@ -178,8 +212,34 @@ public class ConsoleMain {
 
         });
     } catch (IOException ioe) {
-      Throwables.propagate(ioe);
+      throw Throwables.propagate(ioe);
     }
+  }
+  
+  public static final Path IGNORE_FILE = Paths.get(".umpr.core.ignore");
+  
+  /**
+   * Gets the ignore paths from a folder, if the ignore file exists ({@value #IGNORE_FILE}). If the file exists, the 
+   * {@link Set} returned has all the paths resolved against the {@code folder} parameter including 
+   * {@value #IGNORE_FILE}.
+   * 
+   * @param folder Folder to read from
+   * @return Non-{@code null} {@link ImmutableSet} including at least {{@value #IGNORE_FILE}. 
+   */
+  private static Set<Path> getIgnorePaths(final Path folder) {
+    final Path ignPath = folder.resolve(IGNORE_FILE);
+    final File ignFile = ignPath.toFile();
+    
+    final ImmutableSet.Builder<Path> setBld = ImmutableSet.builder();
+    if (ignFile.exists()) {
+      try {
+        Files.readAllLines(ignPath).stream().map(str -> folder.resolve(Paths.get(str))).forEach(setBld::add);
+      } catch (IOException e) {
+        throw Throwables.propagate(e);
+      }
+    }
+    
+    return setBld.add(ignPath).build();
   }
  
   /**
@@ -241,14 +301,13 @@ public class ConsoleMain {
     
     if (cfg.override) {
       if (cfg.outputFolder.exists()) {
-        removeDirectory(cfg.outputFolder.toPath());
+        removeDirectoryContents(cfg.outputFolder.toPath());
       }
       
       if (cfg.importFileFolder.exists()) {
-        removeDirectory(cfg.importFileFolder.toPath());
+        removeDirectoryContents(cfg.importFileFolder.toPath());
       }
     }
-    
     
     mergeDirs(cfg, workingDir, cfg.outputFolder.toPath());
     mergeDirs(cfg, importWorkingDir, cfg.importFileFolder.toPath());

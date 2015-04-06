@@ -1,5 +1,7 @@
 package cruise.umple.umpr.core.consistent;
 
+import static org.testng.Assert.assertEquals;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,6 +13,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import com.codepoetics.protonpack.StreamUtils;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.inject.Inject;
@@ -118,6 +121,57 @@ public class ConsistentsTest {
       }
     });
     
+  }
+  
+  public void deserialize() {
+    repos.forEach(r -> {
+      final ConsistentRepositoryBuilder rbld = bld.withRepository(r);
+      
+      r.getImports().forEach(e -> {
+        final ImportFSM fsm = new ImportFSM(Paths.get(TEST_UMP_DIR.toString(), r.getName(), e.getPath().toString()), 
+            e.getImportType(), e, e.getRepository());
+        
+        if (fsm.isSuccessful()) {
+          rbld.addSuccessFile(fsm.getOutputPath().toString(), fsm.getImportType());
+        } else {
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), fsm.getState(), fsm.getFailure().get());
+        }
+      });
+      
+      rbld.withCalculatedSuccessRate();
+    }); 
+    
+    final ImportRepositorySet fromBld = bld.getRepositorySet();
+    final String json = Consistents.toJson(fromBld);
+    
+    final ImportRepositorySet fromJson = Consistents.fromJson(json);
+    
+    assertEquals(fromJson.getSrcPath(), fromBld.getSrcPath());
+    assertEquals(fromJson.getUmplePath(), fromBld.getUmplePath());
+    
+    StreamUtils.zip(fromJson.getRepositories().stream(), fromBld.getRepositories().stream(), 
+        (actual, expected) -> {
+          assertEquals(actual.getPath(), expected.getPath());
+          assertEquals(actual.getDescription(), expected.getDescription());
+          assertEquals(actual.getDiagramType(), expected.getDiagramType());
+          assertEquals(actual.getSuccessRate(), expected.getSuccessRate());
+          assertEquals(actual.getFailRate(), expected.getFailRate());
+          
+          StreamUtils.zip(actual.getFiles().stream(), expected.getFiles().stream(), 
+              (afile, efile) -> {
+                assertEquals(afile.getImportRepository().getName(), actual.getName()); // names are unique
+                
+                // check file internals
+                assertEquals(afile.getImportType(), efile.getImportType());
+                assertEquals(afile.getLastState(), efile.getLastState());
+                assertEquals(afile.getMessage(), efile.getMessage());
+                assertEquals(afile.isSuccessful(), efile.isSuccessful());
+                
+                return true;
+              });
+          
+          return true;
+        });
   }
   
 }

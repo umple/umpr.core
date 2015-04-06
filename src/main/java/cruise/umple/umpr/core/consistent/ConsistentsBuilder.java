@@ -3,6 +3,7 @@
  */
 package cruise.umple.umpr.core.consistent;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.nio.file.Path;
@@ -11,9 +12,11 @@ import java.sql.Time;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
+import com.google.common.base.Strings;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
+import cruise.umple.umpr.core.DiagramType;
 import cruise.umple.umpr.core.Repository;
 
 /**
@@ -84,6 +87,31 @@ public class ConsistentsBuilder {
     
     return factory.createReposBuilder(this, repository.getName(), repository.getDiagramType(), 
         repository.getDescription(), this.repositorySet);
+  }
+  
+  /**
+   * Creates a new repository builder and adds the current repository information, this is used to build the underlying
+   * types. 
+   * 
+   * @param name Name of the repository, not null or empty
+   * @param diagramType The type of diagrams stored
+   * @param description A human-readable description of the repository
+   *  
+   * @return Non-{@code null} instance of {@link ConsistentRepositoryBuilder} for building children. 
+   * 
+   * @since 11 Mar 2015
+   * 
+   * @see ConsistentRepositoryBuilder
+   */
+  public ConsistentRepositoryBuilder withRepository(final String name, final DiagramType diagramType, 
+      final String description) {
+    checkArgument(!Strings.isNullOrEmpty(name), "name can not be empty or null");
+    checkNotNull(description, "description can not be null");
+    checkNotNull(diagramType);
+    
+    log.finest("Adding repository: " + name);
+    
+    return factory.createReposBuilder(this, name, diagramType, description, this.repositorySet);
   }
   
   
