@@ -35,7 +35,7 @@ public class ConsistentsModule extends AbstractModule {
   @Target(ElementType.FIELD)
   @BindingAnnotation
   public @interface ConsistentsJacksonConfig {
-    
+    /* Intentionally empty */
   }
 
   /* (non-Javadoc)

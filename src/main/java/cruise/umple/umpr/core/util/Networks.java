@@ -31,12 +31,12 @@ public abstract class Networks {
      * <p>
      * Source: http://stackoverflow.com/a/3584332
      */
-    public static boolean ping(String url, int timeout) {
+    public static boolean ping(final String url, int timeout) {
         // Otherwise an exception may be thrown on invalid SSL certificates:
-        url = url.replaceFirst("^https", "http");
+        final String furl = url.replaceFirst("^https", "http");
 
         try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            HttpURLConnection connection = (HttpURLConnection) new URL(furl).openConnection();
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
             connection.setRequestMethod("HEAD");

@@ -70,6 +70,7 @@ public class ConsistentRepositoryBuilder {
    * 
    * @see #addFailedFile(String, String, String)
    */
+  @SuppressWarnings("unused")
   public ConsistentRepositoryBuilder addSuccessFile(final String path, final UmpleImportType fileType) {
     log.finer("Adding successful file: path=" + path + ", type=" + fileType);
     
@@ -112,6 +113,7 @@ public class ConsistentRepositoryBuilder {
    * 
    * @see #addSuccessFile(String, String)
    */
+  @SuppressWarnings("unused")
   public ConsistentRepositoryBuilder addFailedFile(final String path, final UmpleImportType fileType, 
       final ImportFSM.State state, final String failMsg) {
     log.finer("Adding failed file: path=" + path + ", type=" + fileType + ", error=" + failMsg);
