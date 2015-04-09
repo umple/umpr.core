@@ -20,3 +20,5 @@ script:
 
 os:
   - linux
+
+sudo: required
