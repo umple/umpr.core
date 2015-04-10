@@ -4,17 +4,20 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.umpr.core.DiagramType;
 import cruise.umple.umpr.core.DocumentFactory;
+import cruise.umple.umpr.core.ImportAttrib;
+import cruise.umple.umpr.core.License;
 import cruise.umple.umpr.core.Repository;
-import cruise.umple.umpr.core.entities.ImportAttrib;
 import cruise.umple.umpr.core.entities.ImportEntity;
 import cruise.umple.umpr.core.entities.ImportEntityFactory;
 import cruise.umple.umpr.core.util.Networks;
 
+import org.jooq.lambda.Seq;
 import org.jooq.lambda.tuple.Tuple2;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -74,17 +77,19 @@ class AtlanZooRepository extends SimpleRepository implements Repository {
         throw new IllegalStateException("Could not load repository.");
       }
 
-      Stream<Element> top = doc.get().select("#bodyContent a[name]").stream().parallel();
-      final String LINK_SELECTOR = "#bodyContent a[name='%s'] ~ ul a.external.text";
+      Seq<Element> links = Seq.seq(doc.get().select("#bodyContent ul a.external.text"));
+      Seq<Element> bases = Seq.seq(doc.get().select("#bodyContent a[name]"));
       
-      return top.parallel().map(e -> {
-        final String name = e.attr("name");
-        
-        return new Tuple2<String, Element>(REPO_URL + "#" + name, 
-            doc.get().select(String.format(LINK_SELECTOR, name)).first());
-      }).map(t -> {
+      Stream<Tuple2<Element, Element>> top = Seq.zip(bases, links).collect(Collectors.toList()).stream();
+      
+      return top.parallel().map(t -> {
         // (AttribURL, DownloadURL)
-        final ImportAttrib attrib = ImportAttrib.ref(t.v1());
+        final ImportAttrib attrib = ImportAttrib.ref(REPO_URL + "#" + t.v1().attr("name"));
+        
+        if (t.v2() == null) {
+          throw new NullPointerException("v2 == null :: " + t.v1());
+        }
+        
         final URL url = Networks.newURL(t.v2().attr("href"));
         
         return entityFactory.createUrlEntity(this, Paths.get(url.getPath()), UmpleImportType.ECORE, url, 

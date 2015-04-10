@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cruise.umple.umpr.core.DiagramType;
+import cruise.umple.umpr.core.License;
 import cruise.umple.umpr.core.Repository;
 import cruise.umple.umpr.core.entities.ImportEntity;
 

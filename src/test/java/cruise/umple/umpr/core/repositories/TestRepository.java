@@ -16,8 +16,10 @@ import java.util.stream.Stream;
 
 import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.umpr.core.DiagramType;
+import cruise.umple.umpr.core.ImportAttrib;
 import cruise.umple.umpr.core.ImportFSM;
 import cruise.umple.umpr.core.ImportFSM.State;
+import cruise.umple.umpr.core.License;
 import cruise.umple.umpr.core.entities.ImportEntity;
 import cruise.umple.umpr.core.entities.ImportEntityFactory;
 
@@ -49,10 +51,10 @@ public class TestRepository extends SimpleRepository {
   public static final String DESCRIPTION = "Fast and small ECore repository.";
   
   @DType
-  private final static DiagramType REPO_DTYPE = DiagramType.CLASS;
+  public final static DiagramType REPO_DTYPE = DiagramType.CLASS;
   
   @CLicense
-  private final static License REPO_LICENSE = License.MIT;
+  public final static License REPO_LICENSE = License.MIT;
   
   public final List<ImportEntity> entities;
   
@@ -115,10 +117,17 @@ public class TestRepository extends SimpleRepository {
     this.factory = factory;
     ImmutableList.Builder<ImportEntity> bld = ImmutableList.builder();
     
-    ECORE_MAP.entrySet().forEach(entry -> {
-      bld.add(factory.createStringEntity(this, Paths.get(entry.getKey()), UmpleImportType.ECORE, entry.getValue(), 
-          Optional.empty()));
-    });
+    boolean first = true;
+    for (Map.Entry<String, Supplier<String>> e: ECORE_MAP.entrySet()) {
+      Optional<ImportAttrib> attrib = Optional.empty();
+      if (first) {
+        attrib = Optional.of(ImportAttrib.raw("http://www.example.com/" + e.getKey()));
+        first = false;
+      } 
+      
+      bld.add(factory.createStringEntity(this, Paths.get(e.getKey()), UmpleImportType.ECORE, e.getValue(), 
+          attrib));
+    }
     
     entities = bld.build();
   }

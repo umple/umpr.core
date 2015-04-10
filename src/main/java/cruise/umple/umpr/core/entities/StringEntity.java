@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.umpr.core.ImportAttrib;
 import cruise.umple.umpr.core.Repository;
 
 import com.google.inject.assistedinject.Assisted;
@@ -100,7 +101,7 @@ final class StringEntity implements ImportEntity {
    * @see cruise.umple.umpr.core.entities.ImportEntity#getAttributionLocation()
    */
   @Override
-  public Optional<ImportAttrib> getAttributionLocation() {
+  public Optional<ImportAttrib> getAttribLoc() {
     return attrib;
   }
 }

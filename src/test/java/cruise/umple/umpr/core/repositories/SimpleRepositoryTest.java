@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import cruise.umple.umpr.core.DiagramType;
+import cruise.umple.umpr.core.License;
 import cruise.umple.umpr.core.Repository;
 import cruise.umple.umpr.core.consistent.ConsistentsModule;
 import cruise.umple.umpr.core.entities.EntityModule;
@@ -456,15 +457,5 @@ public class SimpleRepositoryTest {
     }
     
   }
-  
-  static class BadCtor extends Fixture implements Repository {
-    
-    @Inject
-    public BadCtor(Logger logger) {
-      super(logger, Object.class);
-    }
-    
-  }
-  
   
 }

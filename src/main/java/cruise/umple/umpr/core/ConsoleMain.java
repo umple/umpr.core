@@ -17,6 +17,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cruise.umple.umpr.core.consistent.Consistents;
+import cruise.umple.umpr.core.consistent.ImportRepositorySet;
+import cruise.umple.umpr.core.entities.ImportEntity;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -28,10 +32,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
-import cruise.umple.umpr.core.consistent.Consistents;
-import cruise.umple.umpr.core.consistent.ImportRepositorySet;
-import cruise.umple.umpr.core.entities.ImportEntity;
 
 public class ConsoleMain {
 
@@ -283,7 +283,7 @@ public class ConsoleMain {
     
     final Set<ImportFSM> allData = urls.parallel() 
         .map(tr -> new ImportFSM(Paths.get(workingDir.toString(), tr.getRepository().getName(), tr.getPath().toString()),
-                                 tr.getImportType(), tr, tr.getRepository()))
+                                 tr.getImportType(), tr, tr.getRepository(), tr.getAttribLoc()))
         .collect(Collectors.toSet());
     
     // write the import files to the import working directory

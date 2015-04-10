@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.umpr.core.ImportAttrib;
 import cruise.umple.umpr.core.Repository;
 import cruise.umple.umpr.core.util.Networks;
 
@@ -60,8 +61,8 @@ final class URLEntity implements ImportEntity {
    * @see cruise.umple.umpr.core.entities.ImportEntity#getAttributionLocation()
    */
   @Override
-  public Optional<ImportAttrib> getAttributionLocation() {
-    return wrappedEntity.getAttributionLocation();
+  public Optional<ImportAttrib> getAttribLoc() {
+    return wrappedEntity.getAttribLoc();
   }
 
   /* (non-Javadoc)

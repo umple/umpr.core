@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cruise.umple.umpr.core.repositories;
+package cruise.umple.umpr.core;
 
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -9,8 +9,9 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.umpr.core.ImportAttrib;
+import cruise.umple.umpr.core.License;
 import cruise.umple.umpr.core.Repository;
-import cruise.umple.umpr.core.repositories.License;
 
 /**
  * Entity to store information about importing. This includes the {@link Path} to store the output file, the 
@@ -48,7 +49,7 @@ public interface ImportEntity extends Supplier<String> {
    * @return {@link Optional#empty()} if the location does not exist. Otherwise, if content is an {@link ImportAttrib}.
    * @since Apr 9, 2015
    */
-  public Optional<ImportAttrib> getAttributionLocation();
+  public Optional<ImportAttrib> getAttribLoc();
   
   /**
    * Create and open an {@link InputStream} instance of the imported entity's content. It is the callers responsibility

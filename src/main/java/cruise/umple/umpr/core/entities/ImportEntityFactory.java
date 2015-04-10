@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.umpr.core.ImportAttrib;
 import cruise.umple.umpr.core.Repository;
 
 import com.google.inject.assistedinject.AssistedInject;

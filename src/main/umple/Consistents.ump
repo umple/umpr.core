@@ -2,8 +2,9 @@ namespace cruise.umple.umpr.core.consistent;
 
 class ImportFile {
   depend cruise.umple.compiler.UmpleImportType;
-  depend cruise.umple.umpr.core.ImportFSM;
+  depend cruise.umple.umpr.core.*;
   depend cruise.umple.umpr.core.ImportFSM.State;
+  depend java.util.Optional;
 
   String path;
   
@@ -13,6 +14,8 @@ class ImportFile {
   
   immutable String message;
   
+  immutable Optional<ImportAttrib> attrib;
+  
   Boolean isSuccessful() {
     return getLastState() == ImportFSM.State.Completed;
   }
@@ -20,15 +23,23 @@ class ImportFile {
   key { path }
 }
 
+external License {};
+
 class ImportRepository {
   depend cruise.umple.compiler.UmpleImportType;
   depend cruise.umple.umpr.core.DiagramType;
   depend cruise.umple.umpr.core.ImportFSM.State;
+  depend cruise.umple.umpr.core.ImportAttrib;
+  depend cruise.umple.umpr.core.License;
+
+  depend java.util.Optional;
   
   immutable String name;
   immutable String description;
   String path;
   immutable DiagramType diagramType;
+  immutable License license;
+
   defaulted Double successRate = 1.0;
   defaulted Double failRate = 0.0;
   
@@ -51,6 +62,7 @@ class ImportRepository {
 
 class ImportRepositorySet {
   depend cruise.umple.umpr.core.DiagramType;
+  depend cruise.umple.umpr.core.License;
   
   immutable Date date;
   immutable Time time;

@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import cruise.umple.umpr.core.entities.ImportEntity;
-import cruise.umple.umpr.core.repositories.License;
 
 /**
  * Defines the behaviour of a collection of importable files.

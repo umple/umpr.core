@@ -2,9 +2,10 @@ package cruise.umple.umpr.core.consistent;
 
 import java.nio.file.Path;
 
-import com.google.inject.assistedinject.Assisted;
-
 import cruise.umple.umpr.core.DiagramType;
+import cruise.umple.umpr.core.License;
+
+import com.google.inject.assistedinject.Assisted;
 
 
 /**
@@ -29,6 +30,6 @@ public interface ConsistentsFactory {
    */
   ConsistentRepositoryBuilder createReposBuilder(final ConsistentsBuilder bld, 
       @Assisted("name") final String name, final DiagramType diagramType, 
-      @Assisted("description") final String description,
+      @Assisted("description") final String description, final License license,
       final ImportRepositorySet repSet);
 }

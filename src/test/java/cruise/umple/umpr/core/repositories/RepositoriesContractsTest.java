@@ -104,12 +104,12 @@ public class RepositoriesContractsTest {
         assertNotNull(ie.getRepository(), "ImportEntity::getRepository was null");
         assertNotNull(ie.getPath(), "ImportEntity::getPath was null (Repository:" + ie.getRepository() + ").");
         assertNotNull(ie.getImportType(), "ImportEntity::getImportType was null (Repository:" + ie.getRepository() + ").");
-        assertNotNull(ie.getAttributionLocation(), 
+        assertNotNull(ie.getAttribLoc(), 
             "ImportEntity::getAttributionLocation was null (Repository:" + ie.getRepository() + ").");
         
-        ie.getAttributionLocation().ifPresent(ia -> {
+        ie.getAttribLoc().ifPresent(ia -> {
           assertNotNull(ia.getType(), "ImportAttrib::getType was null (Repository:" + ie.getRepository() + ").");
-          assertNotNull(ia.getRemote(), "ImportAttrib::getUrl was null (Repository:" + ie.getRepository() + ").");
+          assertNotNull(ia.getRemoteLoc(), "ImportAttrib::getUrl was null (Repository:" + ie.getRepository() + ").");
         });
         
         assertNotNull(ie.get(), "ImportEntity::get was null (Repository:" + ie.getRepository() + ").");

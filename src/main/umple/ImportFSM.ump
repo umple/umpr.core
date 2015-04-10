@@ -1,6 +1,86 @@
 namespace cruise.umple.umpr.core;
 
 /**
+ * 
+ *
+ * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
+ *
+ * @since Apr 9, 2015
+ */
+class ImportAttrib {
+  
+  depend java.net.URL;
+  depend cruise.umple.umpr.core.util.Networks;
+
+  /**
+   * The type of attribution, thus how the URL will work. 
+   * 
+   * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
+   *
+   * @since Apr 9, 2015
+   */
+  Type {
+    /**
+     * The attribution directly links to the content, i.e. ready for download.
+     */
+    RAW { }
+    
+    /**
+     * The attribution link refers to the content, use this if the content is not directly accessible or the page
+     * has ads or similar to cater to. 
+     */
+    REFERENCE { }
+  }
+
+  immutable URL remoteLoc;
+  immutable Type attribType;
+  
+  /**
+   * Create a new {@link ImportAttrib} instance with the given URL, this attribution is {@link Type#RAW}. 
+   * @param remoteUrl Remote location, must not be {@code null}. 
+   * @return Non-{@code null} instance. 
+   * 
+   * @since Apr 9, 2015
+   */
+  public static ImportAttrib raw(final String remoteUrl) {
+    return new ImportAttrib(Networks.newURL(remoteUrl), Type.RAW);
+  }
+  
+  /**
+   * Create a new {@link ImportAttrib} instance with the given URL, this attribution is {@link Type#RAW}.
+   * @param remoteUrl Remote location, must not be {@code null}. 
+   * @return Non-{@code null} instance. 
+   * 
+   * @since Apr 9, 2015
+   */
+  public static ImportAttrib raw(final URL remoteUrl) {
+    return new ImportAttrib(remoteUrl, Type.RAW);
+  }
+  
+  /**
+   * Create a new {@link ImportAttrib} instance with the given URL, this attribution is a {@link Type#REFERENCE}.
+   * @param remoteUrl Remote location, must not be {@code null}. 
+   * @return Non-{@code null} instance. 
+   * 
+   * @since Apr 9, 2015
+   */
+  public static ImportAttrib ref(final String remoteUrl) {
+    return new ImportAttrib(Networks.newURL(remoteUrl), Type.REFERENCE);
+  }
+  
+  /**
+   * Create a new {@link ImportAttrib} instance with the given URL, this attribution is a {@link Type#REFERENCE}.
+   * @param remoteUrl Remote location, must not be {@code null}. 
+   * @return Non-{@code null} instance. 
+   * 
+   * @since Apr 9, 2015
+   */
+  public static ImportAttrib ref(final URL remoteUrl) {
+    return new ImportAttrib(remoteUrl, Type.REFERENCE);
+  }
+}
+
+/**
  * Import State machine for running imports. 
  */
 class ImportFSM {
@@ -25,6 +105,7 @@ class ImportFSM {
   depend cruise.umple.compiler.UmpleImportType;
   
   depend cruise.umple.umpr.core.Repository;
+  depend cruise.umple.umpr.core.ImportAttrib;
   
   state {
     Fetch {
@@ -65,6 +146,7 @@ class ImportFSM {
   Optional<String> inputContent = Optional.empty();
   
   immutable Repository repository;
+  immutable Optional<ImportAttrib> attribLoc;
   
   // holds an exception if errors occur
   defaulted Optional<Throwable> failure = Optional.<Throwable>empty();

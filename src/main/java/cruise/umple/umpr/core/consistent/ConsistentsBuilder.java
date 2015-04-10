@@ -12,12 +12,13 @@ import java.sql.Time;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
+import cruise.umple.umpr.core.DiagramType;
+import cruise.umple.umpr.core.License;
+import cruise.umple.umpr.core.Repository;
+
 import com.google.common.base.Strings;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-
-import cruise.umple.umpr.core.DiagramType;
-import cruise.umple.umpr.core.Repository;
 
 /**
  * Builds a repository chain. This provides a simpler fluent-builder API that delegates to the umple models: 
@@ -86,7 +87,7 @@ public class ConsistentsBuilder {
     log.finest("Adding repository: " + repository);
     
     return factory.createReposBuilder(this, repository.getName(), repository.getDiagramType(), 
-        repository.getDescription(), this.repositorySet);
+        repository.getDescription(), repository.getLicense(), this.repositorySet);
   }
   
   /**
@@ -104,14 +105,14 @@ public class ConsistentsBuilder {
    * @see ConsistentRepositoryBuilder
    */
   public ConsistentRepositoryBuilder withRepository(final String name, final DiagramType diagramType, 
-      final String description) {
+      final String description, final License license) {
     checkArgument(!Strings.isNullOrEmpty(name), "name can not be empty or null");
     checkNotNull(description, "description can not be null");
     checkNotNull(diagramType);
     
     log.finest("Adding repository: " + name);
     
-    return factory.createReposBuilder(this, name, diagramType, description, this.repositorySet);
+    return factory.createReposBuilder(this, name, diagramType, description, license, this.repositorySet);
   }
   
   
