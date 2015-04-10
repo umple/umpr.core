@@ -1,8 +1,11 @@
 package cruise.umple.umpr.core.util;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -119,6 +122,23 @@ public abstract class Networks {
      */
     public static Supplier<String> newURLDownloader(final URL url) {
       return new URLSupplier(url);
+    }
+    
+    /**
+     * Creates a new {@link URL} instance from a {@link String} while catching and propagating the 
+     * {@link MalformedURLException} thrown by {@link URL#URL(String)}.
+     * 
+     * @param url URL to create
+     * @return new non-{@code null} {@link URL} instance.
+     * 
+     * @since Apr 9, 2015
+     */
+    public static URL newURL(final String url) {
+      try {
+        return new URL(checkNotNull(url));
+      } catch (MalformedURLException mue) {
+        throw new IllegalStateException(mue);
+      }
     }
 
 }

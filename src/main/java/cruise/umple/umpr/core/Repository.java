@@ -1,8 +1,11 @@
 package cruise.umple.umpr.core;
 
+import java.net.URL;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import cruise.umple.umpr.core.entities.ImportEntity;
+import cruise.umple.umpr.core.repositories.License;
 
 /**
  * Defines the behaviour of a collection of importable files.
@@ -22,6 +25,19 @@ public interface Repository {
      */
     public String getDescription();
     
+    /**
+     * Return a {@link URL} to a source. 
+     * @return Return {@link Optional#of(Object)} {@link URL} instance if available, otherwise {@link Optional#empty()}.
+     * @since Apr 9, 2015
+     */
+    public Optional<URL> getRemoteLocation();
+    
+    /**
+     * Get the license that all material are covered under. Imported entities have optional {@link License}
+     * @return
+     * @since Apr 9, 2015
+     */
+    public License getLicense();
 
     /**
      * Get the diagram types in the repository.
