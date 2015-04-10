@@ -7,6 +7,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 
 import cruise.umple.umpr.core.Repository;
+import cruise.umple.umpr.core.repositories.TestRepository;
 
 /**
  * Module for Test Repositories to give guarenteed consistencies.

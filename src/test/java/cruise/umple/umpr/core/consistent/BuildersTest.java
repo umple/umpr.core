@@ -22,7 +22,7 @@ import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.umpr.core.ImportFSM;
 import cruise.umple.umpr.core.Repository;
 import cruise.umple.umpr.core.fixtures.MockModule;
-import cruise.umple.umpr.core.fixtures.TestRepository;
+import cruise.umple.umpr.core.repositories.TestRepository;
 
 @Guice(modules=MockModule.class)
 public class BuildersTest {

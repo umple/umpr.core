@@ -3,6 +3,8 @@
  */
 package cruise.umple.umpr.core.repositories;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -16,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -28,7 +31,8 @@ import cruise.umple.umpr.core.entities.ImportEntity;
 import com.google.common.collect.ImmutableList;
 
 /**
- * 
+ * {@link SimpleRepository} is a means of defining repositories quickly and consistently. This class aims to use an
+ * Annotation based scheme to ease the implementation of {@link Repository} types. 
  *
  * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
  *
@@ -139,12 +143,15 @@ abstract class SimpleRepository implements Repository {
     
     if (!fields.isEmpty() && !methods.isEmpty()) {
       log.severe("Class " + base.getName() + " has both method(s) and field(s) annotated for " + annotation.getName());
+      throw new IllegalStateException("Class " + base.getName() + " has both method(s) and "
+          + "field(s) annotated for " + annotation.getName());
     }
     
     Optional<T> out = Optional.empty();
     if (!fields.isEmpty()) {
       if (fields.size() > 1) {
-        log.warning("Class " + base.getName() + " has multiple field annotations for " + annotation.getName());
+        log.severe("Class " + base.getName() + " has multiple field annotations for " + annotation.getName());
+        throw new IllegalStateException("Class " + base.getName() + " has multiple field annotations for " + annotation.getName());
       }
       
       final Field f = fields.get(0);
@@ -164,6 +171,8 @@ abstract class SimpleRepository implements Repository {
     if (!out.isPresent() && !methods.isEmpty()) {
       if (methods.size() > 1) {
         log.warning("Class " + base.getName() + " has multiple method annotations for " + annotation.getName());
+        throw new IllegalStateException("Class " + base.getName() + " has multiple method annotations for " + annotation.getName());
+        
       }
       
       final Method m = methods.get(0);
@@ -199,10 +208,13 @@ abstract class SimpleRepository implements Repository {
    * @param subtype Class for subclass.
    * 
    * @since Apr 9, 2015
-   * @throws IllegalStateException if anything fails throughout or a parameter is not found.
+   * @throws IllegalStateException if anything fails throughout except a parameter not found
+   * @throws NoSuchElementException if a parameter is not found
+   * @see #getReflectiveValue(Class, List, List, Class, Class)
    */
   public SimpleRepository(Logger logger, Class<?> subtype) {
     log = logger;
+    checkArgument(SimpleRepository.class.isAssignableFrom(subtype));
     
     final List<Field> fields = ImmutableList.copyOf(Arrays.asList(subtype.getDeclaredFields()).stream()
         .filter(f -> Modifier.isStatic(f.getModifiers()))
@@ -212,11 +224,13 @@ abstract class SimpleRepository implements Repository {
         .filter(m -> Modifier.isStatic(m.getModifiers()))
         .collect(Collectors.toList()));
     
+    // read the parameters from the list of methods and fields
     this.name = getReflectiveValue(subtype, fields, methods, String.class, Name.class).get();
     this.description = getReflectiveValue(subtype, fields, methods, String.class, Description.class).get();
     this.diagramType = getReflectiveValue(subtype, fields, methods, DiagramType.class, DType.class).get();
     this.license = getReflectiveValue(subtype, fields, methods, License.class, CLicense.class).get();
     
+    // read the URL (it's optional)
     final Optional<String> sloc = getReflectiveValue(subtype, fields, methods, String.class, Remote.class);
     if (sloc.isPresent()) {
       try {

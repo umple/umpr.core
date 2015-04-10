@@ -6,7 +6,6 @@ package cruise.umple.umpr.core.repositories;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -14,6 +13,7 @@ import cruise.umple.compiler.UmpleImportType;
 import cruise.umple.umpr.core.DiagramType;
 import cruise.umple.umpr.core.DocumentFactory;
 import cruise.umple.umpr.core.Repository;
+import cruise.umple.umpr.core.entities.ImportAttrib;
 import cruise.umple.umpr.core.entities.ImportEntity;
 import cruise.umple.umpr.core.entities.ImportEntityFactory;
 import cruise.umple.umpr.core.util.Networks;
@@ -52,12 +52,12 @@ public class ScxmlStandardRepository extends SimpleRepository implements Reposit
   private final DocumentFactory documentFactory;
   private final ImportEntityFactory entityFactory;
   
-  private static final Set<String> EXAMPLE_OUTER_SELECTORS = ImmutableSet.<String>builder()
-      .add(".exampleOuter:has(a#N1182E)") // microwave-01.scxml
-      .add(".exampleOuter:has(a#N1183A)") // microwave-02.scxml
-      .add(".exampleOuter:has(a#N11845)") // 
-      .add(".exampleOuter:has(a#N11851)") // traffic light
-      .add(".exampleOuter:has(a#N11859)") // black jack
+  private static final Set<String> EXAMPLE_ANCHOR_NAMES = ImmutableSet.<String>builder()
+      .add("N1182E") // microwave-01.scxml
+      .add("N1183A") // microwave-02.scxml
+      .add("N11845") // 
+      .add("N11851") // traffic light
+      .add("N11859") // black jack
       .build();
 
   /**
@@ -73,16 +73,6 @@ public class ScxmlStandardRepository extends SimpleRepository implements Reposit
     this.documentFactory = documentFactory;
     this.entityFactory = entityFactory;
   }
-  
-  private static class Example {
-    public final Supplier<String> content;
-    public final String name;
-    
-    Example(final String name, final Supplier<String> content) {
-      this.name = name;
-      this.content = content;
-    }
-  }
 
   @Override
   public Stream<ImportEntity> getImports() {
@@ -94,30 +84,31 @@ public class ScxmlStandardRepository extends SimpleRepository implements Reposit
     }
 
     final Element examples = odoc.get().select(".div1:has(#Examples)").first();
-
-    return EXAMPLE_OUTER_SELECTORS.stream()
-            .map(selector -> {
-              final Elements outerDiv = examples.select(selector);
+    final String EXAMPLE_DIV_SELECTOR = ".exampleOuter:has(a#%s)";
+    
+    return EXAMPLE_ANCHOR_NAMES.stream()
+            .parallel()
+            .map(name -> {
+              
+              final Elements outerDiv = examples.select(String.format(EXAMPLE_DIV_SELECTOR, name));
+              final ImportAttrib attrib = ImportAttrib.ref(REPO_URL + "#" + name);
+              
               final String title = outerDiv.select(".exampleHeader").text();
               final int exampleIdx = title.indexOf("Example:");
               
               if (exampleIdx == -1) {
-                logger.severe("Failed to load " + selector + ", content: " + examples.toString());
-                throw new IllegalStateException("selector failed: " + selector);
+                logger.severe("Failed to load " + name + ", content: " + examples.toString());
+                throw new IllegalStateException("selector failed: " + name);
               }
               
               String path = title.substring(exampleIdx + "Example:".length()).trim().replaceAll("\\s+", "-");
               if (!path.endsWith(".scxml")) {
                 path = path + ".scxml";
               }
-              
-//                final String content = outerDiv.select(".exampleInner pre").text();
 
-              return new Example(path, 
-                  () -> outerDiv.select(".exampleInner pre").text());
-            })
-            .map(e -> {
-                return entityFactory.createStringEntity(this, Paths.get(e.name), UmpleImportType.SCXML, e.content);
+              return entityFactory.createStringEntity(this, Paths.get(path), UmpleImportType.SCXML, 
+                  () -> outerDiv.select(".exampleInner pre").text(), 
+                  Optional.of(attrib));
             });
   }
 
