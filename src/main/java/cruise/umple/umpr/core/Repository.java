@@ -29,7 +29,7 @@ public interface Repository {
      * @return Return {@link Optional#of(Object)} {@link URL} instance if available, otherwise {@link Optional#empty()}.
      * @since Apr 9, 2015
      */
-    public Optional<URL> getRemoteLocation();
+    public Optional<URL> getRemoteLoc();
     
     /**
      * Get the license that all material are covered under. Imported entities have optional {@link License}

@@ -73,6 +73,7 @@ public class ConsistentsTest {
       .assertEquals("$.repositories[0].path", TestRepository.TEST_NAME).and()
       .assertEquals("$.repositories[0].description", TestRepository.DESCRIPTION).and()
       .assertEquals("$.repositories[0].diagramType", TestRepository.REPO_DTYPE.getType()).and()
+      .assertEquals("$.repositories[0].remote", TestRepository.REPO_REMOTE).and()
       .assertEquals("$.repositories[0].license", TestRepository.REPO_LICENSE.toString()).and()
       .assertEquals("$.repositories[0].successRate", 1.0).and()
       .assertEquals("$.repositories[0].failRate", 0.0).and()
@@ -155,6 +156,7 @@ public class ConsistentsTest {
           assertEquals(actual.getDiagramType(), expected.getDiagramType());
           assertEquals(actual.getSuccessRate(), expected.getSuccessRate());
           assertEquals(actual.getFailRate(), expected.getFailRate());
+          assertEquals(actual.getRemoteLoc(), expected.getRemoteLoc());
           assertEquals(actual.getLicense(), expected.getLicense());
           
           StreamUtils.zip(actual.getFiles().stream(), expected.getFiles().stream(), 

@@ -265,7 +265,7 @@ abstract class SimpleRepository implements Repository {
    * @see cruise.umple.umpr.core.Repository#getRemoteLocation()
    */
   @Override
-  public Optional<URL> getRemoteLocation() {
+  public Optional<URL> getRemoteLoc() {
     return remoteLoc;
   }
   

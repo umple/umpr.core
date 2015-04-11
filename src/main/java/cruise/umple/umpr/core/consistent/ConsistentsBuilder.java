@@ -6,9 +6,11 @@ package cruise.umple.umpr.core.consistent;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.net.URL;
 import java.nio.file.Path;
 import java.sql.Date;
 import java.sql.Time;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
@@ -87,7 +89,7 @@ public class ConsistentsBuilder {
     log.finest("Adding repository: " + repository);
     
     return factory.createReposBuilder(this, repository.getName(), repository.getDiagramType(), 
-        repository.getDescription(), repository.getLicense(), this.repositorySet);
+        repository.getDescription(), repository.getRemoteLoc(), repository.getLicense(), this.repositorySet);
   }
   
   /**
@@ -105,14 +107,16 @@ public class ConsistentsBuilder {
    * @see ConsistentRepositoryBuilder
    */
   public ConsistentRepositoryBuilder withRepository(final String name, final DiagramType diagramType, 
-      final String description, final License license) {
+      final String description, final Optional<URL> remoteLoc, final License license) {
     checkArgument(!Strings.isNullOrEmpty(name), "name can not be empty or null");
     checkNotNull(description, "description can not be null");
     checkNotNull(diagramType);
+    checkNotNull(remoteLoc);
+    checkNotNull(license);
     
     log.finest("Adding repository: " + name);
     
-    return factory.createReposBuilder(this, name, diagramType, description, license, this.repositorySet);
+    return factory.createReposBuilder(this, name, diagramType, description, remoteLoc, license, this.repositorySet);
   }
   
   

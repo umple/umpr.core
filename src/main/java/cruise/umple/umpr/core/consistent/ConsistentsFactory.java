@@ -1,6 +1,8 @@
 package cruise.umple.umpr.core.consistent;
 
+import java.net.URL;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import cruise.umple.umpr.core.DiagramType;
 import cruise.umple.umpr.core.License;
@@ -30,6 +32,6 @@ public interface ConsistentsFactory {
    */
   ConsistentRepositoryBuilder createReposBuilder(final ConsistentsBuilder bld, 
       @Assisted("name") final String name, final DiagramType diagramType, 
-      @Assisted("description") final String description, final License license,
-      final ImportRepositorySet repSet);
+      @Assisted("description") final String description, final Optional<URL> remoteLoc, 
+      final License license, final ImportRepositorySet repSet);
 }

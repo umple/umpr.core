@@ -33,11 +33,21 @@ class ImportRepository {
   depend cruise.umple.umpr.core.License;
 
   depend java.util.Optional;
+  depend java.net.URL;
   
   immutable String name;
   immutable String description;
   String path;
+
+  /**
+   * Type of diagrams within this repository.
+   */
   immutable DiagramType diagramType;
+
+  /**
+   * Remotely accessible location for the Repository.
+   */
+  immutable Optional<URL> remoteLoc;
   immutable License license;
 
   defaulted Double successRate = 1.0;
@@ -63,6 +73,9 @@ class ImportRepository {
 class ImportRepositorySet {
   depend cruise.umple.umpr.core.DiagramType;
   depend cruise.umple.umpr.core.License;
+
+  depend java.net.URL;
+  depend java.util.Optional;
   
   immutable Date date;
   immutable Time time;

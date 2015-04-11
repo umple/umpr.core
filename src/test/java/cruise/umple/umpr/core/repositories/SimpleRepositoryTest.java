@@ -72,7 +72,7 @@ public class SimpleRepositoryTest {
     Repository r = injector.getInstance(Proper.class);
     
     assertEquals(r.getName(), Fixture.REPO_NAME);
-    assertEquals(r.getRemoteLocation().get().toString(), Fixture.REPO_URL_STRING);
+    assertEquals(r.getRemoteLoc().get().toString(), Fixture.REPO_URL_STRING);
     assertEquals(r.getDescription(), Fixture.REPO_DESC);
     assertEquals(r.getDiagramType(), Fixture.REPO_DTYPE);
     assertEquals(r.getLicense(), Fixture.REPO_LICENSE);
@@ -96,7 +96,7 @@ public class SimpleRepositoryTest {
   @Test
   public void noUrl() {
     Repository r = injector.getInstance(NoUrl.class);
-    assertFalse(r.getRemoteLocation().isPresent());
+    assertFalse(r.getRemoteLoc().isPresent());
   }
   
   @Test(expectedExceptions=NoSuchElementException.class)
@@ -138,7 +138,7 @@ public class SimpleRepositoryTest {
   @Test
   public void urlViaUrl() throws Throwable {
     Repository r = injector.getInstance(UrlViaUrl.class);
-    assertEquals(r.getRemoteLocation().get(), Fixture.REPO_URL_URL);
+    assertEquals(r.getRemoteLoc().get(), Fixture.REPO_URL_URL);
   }
   
 

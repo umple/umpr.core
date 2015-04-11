@@ -2,6 +2,7 @@ package cruise.umple.umpr.core.consistent;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.net.URL;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -36,12 +37,13 @@ public class ConsistentRepositoryBuilder {
       @Assisted("name") final String name, 
       @Assisted("description") final String description,
       @Assisted final DiagramType diagramType,
+      @Assisted final Optional<URL> remoteLoc,
       @Assisted final License license,
       @Assisted final ImportRepositorySet repSet) {
     this.log = log;
     
     this.importRepos = new ImportRepository(checkNotNull(name), checkNotNull(description), checkNotNull(name), 
-        checkNotNull(diagramType), checkNotNull(license), checkNotNull(repSet));
+        checkNotNull(diagramType), checkNotNull(remoteLoc), checkNotNull(license), checkNotNull(repSet));
     this.parent = checkNotNull(parent);
   }
   

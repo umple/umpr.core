@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -197,6 +198,13 @@ public abstract class Consistents {
       gen.writeStringField("description", value.getDescription());
       gen.writeStringField("name", value.getName());
       gen.writeStringField("diagramType", value.getDiagramType().getType());
+      value.getRemoteLoc().ifPresent(url -> {
+        try {
+          gen.writeStringField("remote", url.toString());
+        } catch (Exception e) {
+          throw Throwables.propagate(e);
+        }
+      });
       gen.writeObjectField("license", value.getLicense());
       gen.writeNumberField("successRate", value.getSuccessRate());
       gen.writeNumberField("failRate", value.getFailRate());
@@ -338,7 +346,12 @@ public abstract class Consistents {
         final DiagramType diagramType = diagramMapping.get(node.findValue("diagramType").asText());
         final License license = License.valueOf(node.findValue("license").asText(License.UNKNOWN.toString()));
         
-        final ConsistentRepositoryBuilder rbld = bld.withRepository(name, diagramType, description, license);
+        Optional<URL> remote = Optional.empty();
+        if (node.has("remote")) {
+          remote = Optional.of(Networks.newURL(node.findValue("remote").asText()));
+        }
+        
+        final ConsistentRepositoryBuilder rbld = bld.withRepository(name, diagramType, description, remote, license);
         final List<JsonNode> files = node.findValues("files");
         
         // work through the file nodes individually

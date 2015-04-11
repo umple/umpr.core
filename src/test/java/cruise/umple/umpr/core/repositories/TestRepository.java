@@ -53,6 +53,9 @@ public class TestRepository extends SimpleRepository {
   @DType
   public final static DiagramType REPO_DTYPE = DiagramType.CLASS;
   
+  @Remote
+  public final static String REPO_REMOTE = "http://www.example.com/";
+  
   @CLicense
   public final static License REPO_LICENSE = License.MIT;
   
