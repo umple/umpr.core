@@ -1,5 +1,5 @@
 <ivy-module version="2.0">
-    <info organisation="org.umple" module="umple-downloader"/>
+    <info organisation="org.umple" module="umpr.core"/>
     <configurations>
         <conf name="build"  description="Provide main functionality"/>
         <conf name="test" extends="build" visibility="private" description="for testing our framework"/>
