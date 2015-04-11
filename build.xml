@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="umpr.core" xmlns:ivy="antlib:org.apache.ivy.ant" default="all">
 
-  <taskdef name="umplec" classname="cruise.umple.util.UmplecAntTask" classpath="${umple.core.jar}" />
-
   <property file="build.properties" />
 
   <exec executable="git" outputproperty="git.revision">
@@ -43,27 +41,40 @@
   <property name="dist.target.fat.jar" value="${dist.dir}/${ant.project.name}-${version}.jar" />
   <property name="dist.main.class" value="cruise.umple.umpr.core.ConsoleMain" />
 
+  <!-- Dependencies -->
+  <property name="lib.dir" value="${basedir}/lib" />
+
+  <!-- Manual Dependencies -->
+  <property name="lib.manual.dir" value="${lib.dir}/manual" />
+  <property name="umple.core.jar" value="${lib.manual.dir}/umple.jar" />
+
   <!-- Ivy -->
   <property name="ivy.install.version" value="2.4.0" />
-  <property name="ivy.jar.dir" value="${basedir}/ivy" />
+  <property name="ivy.jar.dir" value="${lib.manual.dir}" />
   <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy-${ivy.install.version}.jar" />
-  <property name="ivy.lib.dir" value="${basedir}/lib" />
+  <property name="ivy.lib.dir" value="${lib.dir}/ivy" />
 
-  <!-- Module umple.sample.downloader -->
+  <!-- Module umpr.core -->
 
-  <dirname property="module.basedir" file="${ant.file}" />
+  <target name="download-manual-dep" unless="skip.download">
+    <mkdir dir="${lib.dir}" />
+    <mkdir dir="${ivy.jar.dir}" />
+    <mkdir dir="${lib.manual.dir}" />
+    <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" 
+         dest="${ivy.jar.file}" usetimestamp="true" />
 
-  <target name="install-ivy" depends="download-ivy" description="Install ivy">
+    <!-- this isn't actually Ivy, but its the smartest place to do this; eventually we'll use Ivy :) -->
+    <get src="http://try.umple.org/scripts/umple.jar" 
+         dest="${umple.core.jar}"
+         usetimestamp="true" />
+    <taskdef name="umplec" classname="cruise.umple.util.UmplecAntTask" classpath="${umple.core.jar}" />
+  </target>
+
+  <target name="install-ivy" depends="download-manual-dep" description="Install ivy">
     <path id="ivy.lib.path">
       <fileset dir="${ivy.jar.dir}" includes="*.jar" />
     </path>
     <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path" />
-  </target>
-
-  <target name="download-ivy" unless="skip.download">
-    <mkdir dir="${ivy.jar.dir}" />
-    <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" 
-       dest="${ivy.jar.file}" usetimestamp="true" />
   </target>
 
   <target name="ivy-resolve" depends="install-ivy" description="--> retrieve dependencies with ivy">
@@ -72,7 +83,7 @@
   	
   	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
   	  <classpath>
-  	    <pathelement location="${ivy.jar.dir}/ant-contrib-0.3.jar"/>
+  	    <pathelement location="${ivy.lib.dir}/ant-contrib-1.0b3.jar"/>
   	  </classpath>
   	</taskdef>
   </target>
@@ -90,7 +101,7 @@
       <exclude name="**/.git" />
     </javac>
 
-    <!-- Uncommend if resources are required -->
+    <!-- Uncomment if resources are required -->
     <!-- <copy todir="${build.dir.resources}">
         <fileset dir="${src.dir.resources}"
            includes="**/*.properties,**/*.ecore" /> 
@@ -191,8 +202,7 @@
   </target>
 
   <target name="real-clean" depends="clean" description="Clean-up everything, including dependencies">
-    <delete dir="${ivy.jar.dir}" />
-    <delete dir="${ivy.lib.dir}" />
+    <delete dir="${lib.dir}" />
   </target>
 
   <target name="init" description="Build initialization" depends="install-ivy">
