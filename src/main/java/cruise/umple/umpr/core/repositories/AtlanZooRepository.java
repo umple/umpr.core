@@ -83,13 +83,8 @@ class AtlanZooRepository extends SimpleRepository implements Repository {
       Stream<Tuple2<Element, Element>> top = Seq.zip(bases, links).collect(Collectors.toList()).stream();
       
       return top.parallel().map(t -> {
-        // (AttribURL, DownloadURL)
+        // (AttribElement, DownloadElement)
         final ImportAttrib attrib = ImportAttrib.ref(REPO_URL + "#" + t.v1().attr("name"));
-        
-        if (t.v2() == null) {
-          throw new NullPointerException("v2 == null :: " + t.v1());
-        }
-        
         final URL url = Networks.newURL(t.v2().attr("href"));
         
         return entityFactory.createUrlEntity(this, Paths.get(url.getPath()), UmpleImportType.ECORE, url, 

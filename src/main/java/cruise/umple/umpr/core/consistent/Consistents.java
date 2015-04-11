@@ -271,7 +271,7 @@ public abstract class Consistents {
         JsonProcessingException {
       gen.writeStartObject();
       
-      gen.writeObjectField("type", value.getType());
+      gen.writeObjectField("type", value.getAttribType());
       gen.writeStringField("url", value.getRemoteLoc().toString());
       
       gen.writeEndObject();

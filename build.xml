@@ -166,6 +166,7 @@
 
   <!-- Group all dependencies into a big dependency-all.jar -->
   <target name="package.dependencies" depends="init, ivy-resolve">
+    <delete dir="${dist.dir}" />
     <mkdir dir="${dist.dir}" />
 
     <jar jarfile="${dist.dependency.jar}">

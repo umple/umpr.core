@@ -32,6 +32,10 @@ class ImportAttrib {
     REFERENCE { }
   }
 
+  after getType {
+    throw new UnsupportedOperationException("Do not use this method, use getAttribType()");
+  }
+
   immutable URL remoteLoc;
   immutable Type attribType;
   
