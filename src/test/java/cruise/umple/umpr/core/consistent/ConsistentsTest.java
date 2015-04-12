@@ -9,6 +9,11 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Set;
 
+import cruise.umple.umpr.core.ImportFSM;
+import cruise.umple.umpr.core.Repository;
+import cruise.umple.umpr.core.fixtures.MockModule;
+import cruise.umple.umpr.core.repositories.TestRepository;
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -19,12 +24,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.inject.Inject;
 import com.jayway.jsonassert.JsonAssert;
 import com.jayway.jsonassert.JsonAsserter;
-
-import cruise.umple.umpr.core.DiagramType;
-import cruise.umple.umpr.core.ImportFSM;
-import cruise.umple.umpr.core.Repository;
-import cruise.umple.umpr.core.fixtures.MockModule;
-import cruise.umple.umpr.core.fixtures.TestRepository;
 
 @Guice(modules={MockModule.class})
 @Test
@@ -73,7 +72,9 @@ public class ConsistentsTest {
     JsonAssert.with(json)
       .assertEquals("$.repositories[0].path", TestRepository.TEST_NAME).and()
       .assertEquals("$.repositories[0].description", TestRepository.DESCRIPTION).and()
-      .assertEquals("$.repositories[0].diagramType", DiagramType.CLASS.getType()).and()
+      .assertEquals("$.repositories[0].diagramType", TestRepository.REPO_DTYPE.getType()).and()
+      .assertEquals("$.repositories[0].remote", TestRepository.REPO_REMOTE).and()
+      .assertEquals("$.repositories[0].license", TestRepository.REPO_LICENSE.toString()).and()
       .assertEquals("$.repositories[0].successRate", 1.0).and()
       .assertEquals("$.repositories[0].failRate", 0.0).and()
       .assertEquals("$.repositories[0].files", Collections.<ImportFile>emptyList()); 
@@ -86,12 +87,12 @@ public class ConsistentsTest {
       
       r.getImports().forEach(e -> {
         final ImportFSM fsm = new ImportFSM(Paths.get(TEST_UMP_DIR.toString(), r.getName(), e.getPath().toString()), 
-            e.getImportType(), e, e.getRepository());
+            e.getImportType(), e, e.getRepository(), e.getAttribLoc());
         
         if (fsm.isSuccessful()) {
-          rbld.addSuccessFile(fsm.getOutputPath().toString(), fsm.getImportType());
+          rbld.addSuccessFile(fsm.getOutputPath().toString(), fsm.getImportType(), fsm.getAttribLoc());
         } else {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), fsm.getState(), fsm.getFailure().get());
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), fsm.getAttribLoc(), fsm.getState(), fsm.getFailure().get());
         }
       });
       
@@ -118,6 +119,13 @@ public class ConsistentsTest {
         } else {
           jassert.assertEquals(path + ".message", file.getMessage());
         }   
+        
+        if (file.getAttrib().isPresent()) {
+          jassert.assertEquals(path + ".attrib.url", file.getAttrib().get().getRemoteLoc().toString());
+          jassert.assertEquals(path + ".attrib.type", file.getAttrib().get().getAttribType().toString());
+        } else {
+          jassert.assertNotDefined(path + ".attrib");
+        }
       }
     });
     
@@ -127,16 +135,8 @@ public class ConsistentsTest {
     repos.forEach(r -> {
       final ConsistentRepositoryBuilder rbld = bld.withRepository(r);
       
-      r.getImports().forEach(e -> {
-        final ImportFSM fsm = new ImportFSM(Paths.get(TEST_UMP_DIR.toString(), r.getName(), e.getPath().toString()), 
-            e.getImportType(), e, e.getRepository());
-        
-        if (fsm.isSuccessful()) {
-          rbld.addSuccessFile(fsm.getOutputPath().toString(), fsm.getImportType());
-        } else {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), fsm.getState(), fsm.getFailure().get());
-        }
-      });
+      r.getImports().map(e -> new ImportFSM(Paths.get(TEST_UMP_DIR.toString(), r.getName(), e.getPath().toString()), 
+            e.getImportType(), e, e.getRepository(), e.getAttribLoc())).forEach(rbld::addFSM);
       
       rbld.withCalculatedSuccessRate();
     }); 
@@ -156,6 +156,8 @@ public class ConsistentsTest {
           assertEquals(actual.getDiagramType(), expected.getDiagramType());
           assertEquals(actual.getSuccessRate(), expected.getSuccessRate());
           assertEquals(actual.getFailRate(), expected.getFailRate());
+          assertEquals(actual.getRemoteLoc(), expected.getRemoteLoc());
+          assertEquals(actual.getLicense(), expected.getLicense());
           
           StreamUtils.zip(actual.getFiles().stream(), expected.getFiles().stream(), 
               (afile, efile) -> {
@@ -166,6 +168,7 @@ public class ConsistentsTest {
                 assertEquals(afile.getLastState(), efile.getLastState());
                 assertEquals(afile.getMessage(), efile.getMessage());
                 assertEquals(afile.isSuccessful(), efile.isSuccessful());
+                assertEquals(afile.getAttrib(), efile.getAttrib());
                 
                 return true;
               });

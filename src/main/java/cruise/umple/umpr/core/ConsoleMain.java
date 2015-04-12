@@ -17,6 +17,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cruise.umple.umpr.core.consistent.Consistents;
+import cruise.umple.umpr.core.consistent.ImportRepositorySet;
+import cruise.umple.umpr.core.entities.ImportEntity;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -28,10 +32,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
-import cruise.umple.umpr.core.consistent.Consistents;
-import cruise.umple.umpr.core.consistent.ImportRepositorySet;
-import cruise.umple.umpr.core.entities.ImportEntity;
 
 public class ConsoleMain {
 
@@ -283,20 +283,22 @@ public class ConsoleMain {
     
     final Set<ImportFSM> allData = urls.parallel() 
         .map(tr -> new ImportFSM(Paths.get(workingDir.toString(), tr.getRepository().getName(), tr.getPath().toString()),
-                                 tr.getImportType(), tr, tr.getRepository()))
+                                 tr.getImportType(), tr, tr.getRepository(), tr.getAttribLoc()))
         .collect(Collectors.toSet());
     
-    // write the import files to the import working directory
+    // write the import files to the import working directory iff the fetch data exists AND there is no attribution loc
     final EnumSet<ImportFSM.State> IMPORT_SUCCESS = EnumSet.complementOf(EnumSet.of(ImportFSM.State.Fetch));
-    allData.stream().filter(fsm -> IMPORT_SUCCESS.contains(fsm.getState())).forEach(fsm -> {
-      final Path rel = workingDir.relativize(fsm.getOutputPath());
-      final Path imp = importWorkingDir.resolve(rel);
-      try {
-        FileUtils.write(imp.toFile(), fsm.getInputContent().get());
-      } catch (IOException ioe) {
-        throw Throwables.propagate(ioe);
-      }
-    });
+    allData.stream()
+      .filter(fsm -> !fsm.getAttribLoc().isPresent() && IMPORT_SUCCESS.contains(fsm.getState()))
+      .forEach(fsm -> {     
+        final Path rel = workingDir.relativize(fsm.getOutputPath());
+        final Path imp = importWorkingDir.resolve(rel);
+        try {
+          FileUtils.write(imp.toFile(), fsm.getInputContent().get());
+        } catch (IOException ioe) {
+          throw Throwables.propagate(ioe);
+        }
+      });
     
     
     if (cfg.override) {

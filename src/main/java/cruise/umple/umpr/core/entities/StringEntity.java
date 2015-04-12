@@ -3,14 +3,16 @@ package cruise.umple.umpr.core.entities;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.umpr.core.ImportAttrib;
+import cruise.umple.umpr.core.Repository;
+
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-
-import cruise.umple.compiler.UmpleImportType;
-import cruise.umple.umpr.core.Repository;
 
 /**
  * Convenience entity that stores a {@link Supplier} for {@link String} and accesses it quickly. 
@@ -27,6 +29,7 @@ final class StringEntity implements ImportEntity {
   private final Repository repository;
   private final Path path;
   private final UmpleImportType fileType;
+  private final Optional<ImportAttrib> attrib;
   
   /**
    * Creates a new instance of StringEntity.
@@ -39,7 +42,7 @@ final class StringEntity implements ImportEntity {
   @AssistedInject
   StringEntity(Logger log, 
       @Assisted UmpleImportType fileType, @Assisted Repository repository,
-      @Assisted Path path, @Assisted Supplier<String> content) {
+      @Assisted Path path, @Assisted Supplier<String> content, @Assisted Optional<ImportAttrib> attrib) {
     this.log = log;
     
     // params
@@ -47,6 +50,7 @@ final class StringEntity implements ImportEntity {
     this.repository = checkNotNull(repository);
     this.path = checkNotNull(path);
     this.fileType = checkNotNull(fileType);
+    this.attrib = checkNotNull(attrib);
   }
   
   /**
@@ -61,7 +65,7 @@ final class StringEntity implements ImportEntity {
   @AssistedInject
   StringEntity(Logger log, 
       @Assisted UmpleImportType fileType, @Assisted Repository repository, 
-      @Assisted Path path, @Assisted String content) {
+      @Assisted Path path, @Assisted String content, @Assisted Optional<ImportAttrib> attrib) {
     this.log = log;
     
     // params
@@ -70,6 +74,7 @@ final class StringEntity implements ImportEntity {
     this.repository = checkNotNull(repository);
     this.path = checkNotNull(path);
     this.fileType = checkNotNull(fileType);
+    this.attrib = checkNotNull(attrib);
   }
 
   @Override
@@ -90,5 +95,13 @@ final class StringEntity implements ImportEntity {
   @Override
   public UmpleImportType getImportType() {
     return fileType;
+  }
+
+  /* (non-Javadoc)
+   * @see cruise.umple.umpr.core.entities.ImportEntity#getAttributionLocation()
+   */
+  @Override
+  public Optional<ImportAttrib> getAttribLoc() {
+    return attrib;
   }
 }

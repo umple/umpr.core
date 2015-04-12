@@ -1,5 +1,6 @@
 package cruise.umple.umpr.core.repositories;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
@@ -7,15 +8,16 @@ import java.net.URL;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import cruise.umple.umpr.core.DownloaderModule;
+import cruise.umple.umpr.core.Repository;
+import cruise.umple.umpr.core.util.Pair;
+
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-
-import cruise.umple.umpr.core.DownloaderModule;
-import cruise.umple.umpr.core.Repository;
-import cruise.umple.umpr.core.util.Pair;
 
 /**
  * This Test will test all loaded repositories to make sure that when inheriting from the {@link Repository} interface, 
@@ -44,9 +46,14 @@ public class RepositoriesContractsTest {
      */
     @Test
     public void checkNames() {
+      Set<String> names = Sets.newHashSet();
       for (Repository r : allRepositories) {
         assertFalse(Strings.isNullOrEmpty(r.getName()), "Repository had a null name.");
+        names.add(r.getName());
       }
+      
+      // check that the names are all unique
+      assertEquals(names.size(), allRepositories.size());
     }
     
     /**
@@ -59,6 +66,15 @@ public class RepositoriesContractsTest {
         assertNotNull(r.getDescription(), "Repository had a null name.");
         assertFalse(r.getDescription().isEmpty(), "Repository had an empty name.");
       }
+    }
+    
+    /**
+     * Check all licenses adhere to {@link Repository#getLicense()}
+     * @since Apr 10, 2015
+     */
+    @Test
+    public void checkLicenses() {
+      allRepositories.stream().map(Repository::getLicense).forEach(l -> assertNotNull(l));
     }
     
     /**
@@ -82,12 +98,20 @@ public class RepositoriesContractsTest {
     public void checkURLs() {
       logger.info("Running Repository tests, these may take time depending on internet connection and repositories.");
       
-      // Run everything in parallel, this operation is already *really* slow. 
+      // Run everything in parallel, this test is already *really* slow. 
       allRepositories.stream().flatMap(Repository::getImports).parallel().forEach(ie -> {
         assertNotNull(ie, "ImportEntity was null");
         assertNotNull(ie.getRepository(), "ImportEntity::getRepository was null");
         assertNotNull(ie.getPath(), "ImportEntity::getPath was null (Repository:" + ie.getRepository() + ").");
         assertNotNull(ie.getImportType(), "ImportEntity::getImportType was null (Repository:" + ie.getRepository() + ").");
+        assertNotNull(ie.getAttribLoc(), 
+            "ImportEntity::getAttributionLocation was null (Repository:" + ie.getRepository() + ").");
+        
+        ie.getAttribLoc().ifPresent(ia -> {
+          assertNotNull(ia.getType(), "ImportAttrib::getType was null (Repository:" + ie.getRepository() + ").");
+          assertNotNull(ia.getRemoteLoc(), "ImportAttrib::getUrl was null (Repository:" + ie.getRepository() + ").");
+        });
+        
         assertNotNull(ie.get(), "ImportEntity::get was null (Repository:" + ie.getRepository() + ").");
       });
     }

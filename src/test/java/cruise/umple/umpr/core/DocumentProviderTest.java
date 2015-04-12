@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 
+import cruise.umple.umpr.core.fixtures.MockModule;
+
 import org.apache.commons.io.FileUtils;
 import org.jsoup.nodes.Document;
 import org.testng.annotations.BeforeClass;
@@ -15,8 +17,6 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
-
-import cruise.umple.umpr.core.fixtures.MockModule;
 
 /**
  * Test {@link RealDocumentFactory}.

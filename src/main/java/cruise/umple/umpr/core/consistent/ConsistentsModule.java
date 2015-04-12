@@ -8,6 +8,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import cruise.umple.umpr.core.ImportAttrib;
+
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -35,7 +37,7 @@ public class ConsistentsModule extends AbstractModule {
   @Target(ElementType.FIELD)
   @BindingAnnotation
   public @interface ConsistentsJacksonConfig {
-    
+    /* Intentionally empty */
   }
 
   /* (non-Javadoc)
@@ -53,6 +55,7 @@ public class ConsistentsModule extends AbstractModule {
     jsonModule.addSerializer(ImportRepositorySet.class, new Consistents.ImportRepositorySetSerializer());
     jsonModule.addSerializer(ImportRepository.class, new Consistents.ImportRepositorySerializer());
     jsonModule.addSerializer(ImportFile.class, new Consistents.ImportFileSerializer());
+    jsonModule.addSerializer(ImportAttrib.class, new Consistents.AttribSerializer());
     jsonModule.addDeserializer(ImportRepositorySet.class, new Consistents.ImportRepositorySetDeserializer(getProvider(ConsistentsFactory.class)));
     
     final ObjectMapper mapper = new ObjectMapper();

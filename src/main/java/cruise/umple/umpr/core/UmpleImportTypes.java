@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import cruise.umple.compiler.UmpleImportType;
+
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
-
-import cruise.umple.compiler.UmpleImportType;
 
 /**
  * @author kevin

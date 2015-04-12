@@ -19,8 +19,6 @@ public class EntityModule implements Module {
       .implement(ImportEntity.class, Names.named("String"), StringEntity.class)
       .implement(ImportEntity.class, Names.named("URL"), URLEntity.class)
       .build(ImportEntityFactory.class));
-  
-    binder.requestStaticInjection(ImportEntities.class);
   }
 
 }

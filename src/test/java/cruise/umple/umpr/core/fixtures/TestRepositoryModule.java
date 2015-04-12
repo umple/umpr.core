@@ -3,10 +3,11 @@
  */
 package cruise.umple.umpr.core.fixtures;
 
+import cruise.umple.umpr.core.Repository;
+import cruise.umple.umpr.core.repositories.TestRepository;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-
-import cruise.umple.umpr.core.Repository;
 
 /**
  * Module for Test Repositories to give guarenteed consistencies.

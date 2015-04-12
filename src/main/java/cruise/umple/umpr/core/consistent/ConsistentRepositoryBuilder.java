@@ -2,16 +2,20 @@ package cruise.umple.umpr.core.consistent;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.net.URL;
+import java.util.Optional;
 import java.util.logging.Logger;
+
+import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.umpr.core.DiagramType;
+import cruise.umple.umpr.core.ImportAttrib;
+import cruise.umple.umpr.core.ImportFSM;
+import cruise.umple.umpr.core.License;
 
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-
-import cruise.umple.compiler.UmpleImportType;
-import cruise.umple.umpr.core.DiagramType;
-import cruise.umple.umpr.core.ImportFSM;
 
 /**
  * Builds an {@link ImportRepository} instance simply by removing some guess work. 
@@ -33,11 +37,13 @@ public class ConsistentRepositoryBuilder {
       @Assisted("name") final String name, 
       @Assisted("description") final String description,
       @Assisted final DiagramType diagramType,
+      @Assisted final Optional<URL> remoteLoc,
+      @Assisted final License license,
       @Assisted final ImportRepositorySet repSet) {
     this.log = log;
     
     this.importRepos = new ImportRepository(checkNotNull(name), checkNotNull(description), checkNotNull(name), 
-        checkNotNull(diagramType), checkNotNull(repSet));
+        checkNotNull(diagramType), checkNotNull(remoteLoc), checkNotNull(license), checkNotNull(repSet));
     this.parent = checkNotNull(parent);
   }
   
@@ -59,6 +65,25 @@ public class ConsistentRepositoryBuilder {
     return this;
   }
   
+  /**
+   * Add the result of an {@link ImportFSM} to the builder.
+   * @param fsm Non-{@code null} Finite state machine. 
+   * @return {@code this} instance. 
+   * 
+   * @since Apr 10, 2015
+   */
+  public ConsistentRepositoryBuilder addFSM(final ImportFSM fsm) {
+    checkNotNull(fsm);
+    
+    if (fsm.isSuccessful()) {
+      addSuccessFile(fsm.getOutputPath().toString(), fsm.getImportType(), fsm.getAttribLoc());
+    } else {
+      addFailedFile(fsm.getOutputPath().toString(), fsm.getImportType(), fsm.getAttribLoc(), fsm.getState(), 
+          fsm.getFailure().get());
+    }
+    
+    return this;
+  }
   
   /**
    * Add a file that was successfully imported.
@@ -70,10 +95,12 @@ public class ConsistentRepositoryBuilder {
    * 
    * @see #addFailedFile(String, String, String)
    */
-  public ConsistentRepositoryBuilder addSuccessFile(final String path, final UmpleImportType fileType) {
-    log.finer("Adding successful file: path=" + path + ", type=" + fileType);
+  @SuppressWarnings("unused")
+  public ConsistentRepositoryBuilder addSuccessFile(final String path, final UmpleImportType fileType, 
+      final Optional<ImportAttrib> attrib) {
+    log.finer("Adding successful file: path=" + path + ", type=" + fileType + ", attrib=" + attrib);
     
-    new ImportFile(path, fileType, ImportFSM.State.Completed, "", importRepos);
+    new ImportFile(path, fileType, ImportFSM.State.Completed, "", attrib, importRepos);
     
     return this;
   }
@@ -90,15 +117,14 @@ public class ConsistentRepositoryBuilder {
    * @see #addSuccessFile(String, String)
    */
   public ConsistentRepositoryBuilder addFailedFile(final String path, final UmpleImportType fileType, 
-      final ImportFSM.State state, final Throwable ex) {
+      final Optional<ImportAttrib> attrib, final ImportFSM.State state, final Throwable ex) {
     String message = Throwables.getRootCause(ex).getMessage();
     if (Strings.isNullOrEmpty(message)) {
-      message = ex.toString();
+      message = Throwables.getStackTraceAsString(Throwables.getRootCause(ex));
       log.info("Error importing model: " + Throwables.getStackTraceAsString(ex));
     }
     
-     
-    return addFailedFile(path, fileType, state, message);
+    return addFailedFile(path, fileType, attrib, state, message);
   }
   
   /**
@@ -112,11 +138,12 @@ public class ConsistentRepositoryBuilder {
    * 
    * @see #addSuccessFile(String, String)
    */
-  public ConsistentRepositoryBuilder addFailedFile(final String path, final UmpleImportType fileType, 
-      final ImportFSM.State state, final String failMsg) {
+  @SuppressWarnings("unused")
+  public ConsistentRepositoryBuilder addFailedFile(final String path, final UmpleImportType fileType,
+      final Optional<ImportAttrib> attrib, final ImportFSM.State state, final String failMsg) {
     log.finer("Adding failed file: path=" + path + ", type=" + fileType + ", error=" + failMsg);
 
-    new ImportFile(path, fileType, state, failMsg, importRepos);
+    new ImportFile(path, fileType, state, failMsg, attrib, importRepos);
     
     return this;
   }

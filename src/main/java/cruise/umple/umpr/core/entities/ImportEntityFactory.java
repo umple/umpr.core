@@ -5,13 +5,15 @@ package cruise.umple.umpr.core.entities;
 
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Supplier;
+
+import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.umpr.core.ImportAttrib;
+import cruise.umple.umpr.core.Repository;
 
 import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.name.Named;
-
-import cruise.umple.compiler.UmpleImportType;
-import cruise.umple.umpr.core.Repository;
 
 /**
  * {@link AssistedInject} factory for creating {@link ImportEntity} instances.
@@ -28,6 +30,7 @@ public interface ImportEntityFactory {
    * @param path Relative path to store the entity after import
    * @param content Content to import
    * @param fileType File Type
+   * @param attrib The attribution information
    * 
    * @return Non-{@code null} instance
    * 
@@ -36,7 +39,7 @@ public interface ImportEntityFactory {
    */
   @Named("String")
   public ImportEntity createStringEntity(Repository repository, Path path, 
-      UmpleImportType fileType, String content);
+      UmpleImportType fileType, String content, Optional<ImportAttrib> attrib);
   
   /**
    * Creates an {@link ImportEntity} that returns the result of a {@link Supplier} every time. 
@@ -45,6 +48,7 @@ public interface ImportEntityFactory {
    * @param path Relative path to store the entity after import
    * @param content Content to import
    * @param fileType File Type
+   * @param attrib The attribution information
    * 
    * @return Non-{@code null} instance
    * 
@@ -52,7 +56,8 @@ public interface ImportEntityFactory {
    * @since Mar 2, 2015
    */
   @Named("String")
-  public ImportEntity createStringEntity(Repository repository, Path path, UmpleImportType fileType, Supplier<String> content);
+  public ImportEntity createStringEntity(Repository repository, Path path, UmpleImportType fileType, 
+      Supplier<String> content, Optional<ImportAttrib> attrib);
   
   /**
    * Creates an {@link ImportEntity} that returns the result of downloading the {@link URL} instance.
@@ -61,11 +66,13 @@ public interface ImportEntityFactory {
    * @param path Relative path to store the entity after import
    * @param url Resource to download
    * @param fileType File Type 
+   * @param attrib The attribution information
    * 
    * @return New non-{@code null} instance
    * 
    * @since Mar 2, 2015
    */
   @Named("URL")
-  public ImportEntity createUrlEntity(Repository repository, Path path, UmpleImportType fileType, URL url);
+  public ImportEntity createUrlEntity(Repository repository, Path path, UmpleImportType fileType, URL url, 
+      Optional<ImportAttrib> attrib);
 }

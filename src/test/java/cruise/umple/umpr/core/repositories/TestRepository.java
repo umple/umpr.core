@@ -1,16 +1,27 @@
 /**
  * 
  */
-package cruise.umple.umpr.core.fixtures;
+package cruise.umple.umpr.core.repositories;
 
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
+
+import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.umpr.core.DiagramType;
+import cruise.umple.umpr.core.ImportAttrib;
+import cruise.umple.umpr.core.ImportFSM;
+import cruise.umple.umpr.core.ImportFSM.State;
+import cruise.umple.umpr.core.License;
+import cruise.umple.umpr.core.entities.ImportEntity;
+import cruise.umple.umpr.core.entities.ImportEntityFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
@@ -22,14 +33,6 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import cruise.umple.compiler.UmpleImportType;
-import cruise.umple.umpr.core.DiagramType;
-import cruise.umple.umpr.core.ImportFSM;
-import cruise.umple.umpr.core.ImportFSM.State;
-import cruise.umple.umpr.core.Repository;
-import cruise.umple.umpr.core.entities.ImportEntity;
-import cruise.umple.umpr.core.entities.ImportEntityFactory;
-
 
 /**
  * Test repository that will respond immediately without lag. 
@@ -39,11 +42,22 @@ import cruise.umple.umpr.core.entities.ImportEntityFactory;
  * @since 11 Mar 2015
  */
 @Singleton
-public class TestRepository implements Repository {
+public class TestRepository extends SimpleRepository {
   
+  @Name
   public static final String TEST_NAME = "TestRespository-ECore";
   
+  @Description
   public static final String DESCRIPTION = "Fast and small ECore repository.";
+  
+  @DType
+  public final static DiagramType REPO_DTYPE = DiagramType.CLASS;
+  
+  @Remote
+  public final static String REPO_REMOTE = "http://www.example.com/";
+  
+  @CLicense
+  public final static License REPO_LICENSE = License.MIT;
   
   public final List<ImportEntity> entities;
   
@@ -101,39 +115,24 @@ public class TestRepository implements Repository {
   }
   
   @Inject
-  TestRepository(final ImportEntityFactory factory) {
+  TestRepository(Logger log, final ImportEntityFactory factory) {
+    super(log, TestRepository.class);
     this.factory = factory;
     ImmutableList.Builder<ImportEntity> bld = ImmutableList.builder();
     
-    ECORE_MAP.entrySet().forEach(entry -> {
-      bld.add(factory.createStringEntity(this, Paths.get(entry.getKey()), UmpleImportType.ECORE, entry.getValue()));
-    });
+    boolean first = true;
+    for (Map.Entry<String, Supplier<String>> e: ECORE_MAP.entrySet()) {
+      Optional<ImportAttrib> attrib = Optional.empty();
+      if (first) {
+        attrib = Optional.of(ImportAttrib.raw("http://www.example.com/" + e.getKey()));
+        first = false;
+      } 
+      
+      bld.add(factory.createStringEntity(this, Paths.get(e.getKey()), UmpleImportType.ECORE, e.getValue(), 
+          attrib));
+    }
     
     entities = bld.build();
-  }
-  
-  /* (non-Javadoc)
-   * @see cruise.umple.sample.downloader.Repository#getName()
-   */
-  @Override
-  public String getName() {
-    return TEST_NAME;
-  }
-
-  /* (non-Javadoc)
-   * @see cruise.umple.sample.downloader.Repository#getDescription()
-   */
-  @Override
-  public String getDescription() {
-    return DESCRIPTION;
-  }
-
-  /* (non-Javadoc)
-   * @see cruise.umple.sample.downloader.Repository#getFileType()
-   */
-  @Override
-  public DiagramType getDiagramType() {
-    return DiagramType.CLASS;
   }
 
   /* (non-Javadoc)

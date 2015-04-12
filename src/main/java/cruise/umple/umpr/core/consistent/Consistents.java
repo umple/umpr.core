@@ -8,13 +8,25 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.umpr.core.ConsoleMain;
+import cruise.umple.umpr.core.DiagramType;
+import cruise.umple.umpr.core.ImportAttrib;
+import cruise.umple.umpr.core.ImportFSM;
+import cruise.umple.umpr.core.License;
+import cruise.umple.umpr.core.Repository;
+import cruise.umple.umpr.core.consistent.ConsistentsModule.ConsistentsJacksonConfig;
+import cruise.umple.umpr.core.util.Networks;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -34,12 +46,6 @@ import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-import cruise.umple.compiler.UmpleImportType;
-import cruise.umple.umpr.core.ConsoleMain;
-import cruise.umple.umpr.core.DiagramType;
-import cruise.umple.umpr.core.ImportFSM;
-import cruise.umple.umpr.core.Repository;
-import cruise.umple.umpr.core.consistent.ConsistentsModule.ConsistentsJacksonConfig;
 
 /**
  * @author Kevin Brightwell <kevin.brightwell2@gmail.com>
@@ -82,9 +88,9 @@ public abstract class Consistents {
         entry.getValue().forEach( data -> {
           final Path outpath = data.getOutputPath().getFileName();
           if (data.isSuccessful()) {
-            repoBld.addSuccessFile(outpath.toString(), data.getImportType());
+            repoBld.addSuccessFile(outpath.toString(), data.getImportType(), data.getAttribLoc());
           } else {
-            repoBld.addFailedFile(outpath.toString(), data.getImportType(), 
+            repoBld.addFailedFile(outpath.toString(), data.getImportType(), data.getAttribLoc(), 
                 data.getState(), data.getFailure().get());
           }
         });
@@ -192,6 +198,14 @@ public abstract class Consistents {
       gen.writeStringField("description", value.getDescription());
       gen.writeStringField("name", value.getName());
       gen.writeStringField("diagramType", value.getDiagramType().getType());
+      value.getRemoteLoc().ifPresent(url -> {
+        try {
+          gen.writeStringField("remote", url.toString());
+        } catch (Exception e) {
+          throw Throwables.propagate(e);
+        }
+      });
+      gen.writeObjectField("license", value.getLicense());
       gen.writeNumberField("successRate", value.getSuccessRate());
       gen.writeNumberField("failRate", value.getFailRate());
       
@@ -230,8 +244,39 @@ public abstract class Consistents {
         gen.writeStringField("message", value.getMessage());
       }
       
+      value.getAttrib().ifPresent(attrib -> {
+        try {
+          gen.writeFieldName("attrib");
+          
+          JsonSerializer<Object> fileSrlzr = serializers.findValueSerializer(ImportAttrib.class);
+
+          fileSrlzr.serialize(attrib, gen, serializers);
+        } catch (Exception e) {
+          throw Throwables.propagate(e);
+        }
+        
+      });
+      
       gen.writeEndObject();
     }
+  }
+  
+  static class AttribSerializer extends JsonSerializer<ImportAttrib> {
+
+    /* (non-Javadoc)
+     * @see com.fasterxml.jackson.databind.JsonSerializer#serialize(java.lang.Object, com.fasterxml.jackson.core.JsonGenerator, com.fasterxml.jackson.databind.SerializerProvider)
+     */
+    @Override
+    public void serialize(ImportAttrib value, JsonGenerator gen, SerializerProvider serializers) throws IOException,
+        JsonProcessingException {
+      gen.writeStartObject();
+      
+      gen.writeObjectField("type", value.getAttribType());
+      gen.writeStringField("url", value.getRemoteLoc().toString());
+      
+      gen.writeEndObject();
+    }
+    
   }
   
   static class ImportRepositorySetDeserializer extends JsonDeserializer<ImportRepositorySet> {
@@ -299,8 +344,14 @@ public abstract class Consistents {
         final String description = node.findValue("description").asText();
         final String name = node.findValue("name").asText();
         final DiagramType diagramType = diagramMapping.get(node.findValue("diagramType").asText());
+        final License license = License.valueOf(node.findValue("license").asText(License.UNKNOWN.toString()));
         
-        final ConsistentRepositoryBuilder rbld = bld.withRepository(name, diagramType, description);
+        Optional<URL> remote = Optional.empty();
+        if (node.has("remote")) {
+          remote = Optional.of(Networks.newURL(node.findValue("remote").asText()));
+        }
+        
+        final ConsistentRepositoryBuilder rbld = bld.withRepository(name, diagramType, description, remote, license);
         final List<JsonNode> files = node.findValues("files");
         
         // work through the file nodes individually
@@ -317,12 +368,20 @@ public abstract class Consistents {
           final ImportFSM.State lastState = ImportFSM.State.valueOf(fnode.findValue("lastState").asText());
           final boolean successful = fnode.findValue("successful").asBoolean(false);
           
+          Optional<ImportAttrib> attrib = Optional.empty();
+          if (fnode.has("attrib")) {
+            final JsonNode attr = fnode.findValue("attrib");
+            final ImportAttrib.Type attrType = ImportAttrib.Type.valueOf(attr.findValue("type").asText());
+            
+            attrib = Optional.of(new ImportAttrib(Networks.newURL(attr.findValue("url").asText()), attrType));
+          }
+          
           // add the file
           if (!successful) {
             final String message = fnode.findValue("message").asText();
-            rbld.addFailedFile(path, type, lastState, message);
+            rbld.addFailedFile(path, type, attrib, lastState, message);
           } else {
-            rbld.addSuccessFile(path, type);
+            rbld.addSuccessFile(path, type, attrib);
           }
         });
         

@@ -10,6 +10,12 @@ import java.sql.Time;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import cruise.umple.compiler.UmpleImportType;
+import cruise.umple.umpr.core.ImportFSM;
+import cruise.umple.umpr.core.Repository;
+import cruise.umple.umpr.core.fixtures.MockModule;
+import cruise.umple.umpr.core.repositories.TestRepository;
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -17,12 +23,6 @@ import org.testng.annotations.Test;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
-
-import cruise.umple.compiler.UmpleImportType;
-import cruise.umple.umpr.core.ImportFSM;
-import cruise.umple.umpr.core.Repository;
-import cruise.umple.umpr.core.fixtures.MockModule;
-import cruise.umple.umpr.core.fixtures.TestRepository;
 
 @Guice(modules=MockModule.class)
 public class BuildersTest {
@@ -74,9 +74,9 @@ public class BuildersTest {
       r.getImports().forEach(e -> {
         try {
           e.get();
-          rbld.addSuccessFile(e.getPath().toString(), e.getImportType());
+          rbld.addSuccessFile(e.getPath().toString(), e.getImportType(), e.getAttribLoc());
         } catch (Exception ex) {
-          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), ImportFSM.State.Fetch, ex);
+          rbld.addFailedFile(e.getPath().toString(), e.getImportType(), e.getAttribLoc(), ImportFSM.State.Fetch, ex);
         }
       });
     });
@@ -85,6 +85,8 @@ public class BuildersTest {
     fromBld.getRepositories().forEach( repo -> {
       assertTrue(repo.getPath().contains(TestRepository.TEST_NAME), "Repository name is not found in path.");
       assertEquals(repo.getFiles().size(), TestRepository.ECORE_FILES.size());
+      assertEquals(repo.getLicense(), TestRepository.REPO_LICENSE);
+      assertEquals(repo.getDiagramType(), TestRepository.REPO_DTYPE);
       
       final AtomicInteger counter = new AtomicInteger(0);
       
