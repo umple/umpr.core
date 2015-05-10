@@ -38,7 +38,7 @@ public class ScxmlStandardRepository extends SimpleRepository implements Reposit
   private static final String REPO_NAME = "W3C-SCXML";
   
   @Remote
-  private final static String REPO_URL = "http://www.w3.org/TR/scxml/";
+  private final static String REPO_URL = "http://www.w3.org/TR/2014/WD-scxml-20140529";
   
   @Description
   private final static String REPO_DESC = "State Chart XML (SCXML): State Machine Notation for Control Abstraction";

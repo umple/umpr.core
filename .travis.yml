@@ -18,6 +18,8 @@ script:
   # package it (this should never fail..)
   - ant -f build.xml package
 
+  - mvn package
+
 os:
   - linux
 

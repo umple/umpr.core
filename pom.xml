@@ -1,0 +1,251 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>cruise.umple.umpr</groupId>
+    <artifactId>umpr.core</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Umpr Core Library</name>
+    <description>The core library backing for the Umpr application for Umpr.</description>
+    <url>http://umpr.umple.org/</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Kevin Brightwell</name>
+            <email>kevin.brightwell2@gmail.com</email>
+            <url>https://github.com/Nava2</url>
+            <organization>Umple</organization>
+            <organizationUrl>http://www.umple.org</organizationUrl>
+        </developer>
+    </developers>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>ossrh</id>
+            <name>Sonatype OSS Repository</name>
+            <url>http://oss.sonatype.org/content/groups/public</url>
+            <layout>default</layout>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <scm>
+        <connection>scm:git:git@github.com:umple-ucosp/umpr.core.git.git</connection>
+        <developerConnection>scm:git:git@github.com:umple-ucosp/umpr.core.git</developerConnection>
+        <url>https://github.com/umple-ucosp/umpr.core.git</url>
+    </scm>
+
+    <!-- BUILD PROPERTIES -->
+    <properties>
+        <!-- PROJECT ENCODING PROPERTIES -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.0</version>
+                <configuration>
+                    <!-- Force 1.8 build level -->
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <testSource>1.8</testSource>
+                    <testTarget>1.8</testTarget>
+                </configuration>
+            </plugin>
+
+            <!-- EXTERNAL DEPENDENCY RESOLVER -->
+            <plugin>
+                <groupId>com.savage7.maven.plugins</groupId>
+                <artifactId>maven-external-dependency-plugin</artifactId>
+                <version>0.6-SNAPSHOT</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <stagingDirectory>
+                        ${project.build.directory}/dependencies/
+                    </stagingDirectory>
+                    <createChecksum>true</createChecksum>
+                    <skipChecksumVerification>false</skipChecksumVerification>
+                    <force>false</force>
+                    <artifactItems>
+                        <!-- Umple core jar -->
+                        <artifactItem>
+                            <groupId>cruise.umple</groupId>
+                            <artifactId>umple.core</artifactId>
+                            <version>LATEST</version>
+                            <packaging>jar</packaging>
+                            <downloadUrl>http://try.umple.org/scripts/umple.jar</downloadUrl>
+                        </artifactItem>
+                    </artifactItems>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <id>clean-external-dependencies</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean-external</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>resolve-install-external-dependencies</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>resolve-external</goal>
+                            <goal>install-external</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>deploy-external-dependencies</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy-external</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+            </plugin>
+
+            <!-- generate umple sources -->
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <tasks>
+                                <taskdef name="umplec" classname="cruise.umple.util.UmplecAntTask" classpathref="maven.dependency.classpath" />
+                                <umplec src="${project.build.sourceDirectory}/../umple/Master.ump"
+                                        dest="${project.build.directory}/generated-sources/"
+                                        generate="Java" />
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+
+    <dependencies>
+
+        <!-- Core: -->
+        <dependency>
+            <groupId>cruise.umple</groupId>
+            <artifactId>umple.core</artifactId>
+            <version>LATEST</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.8.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>4.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-multibindings</artifactId>
+            <version>4.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-assistedinject</artifactId>
+            <version>4.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+            <version>1.48</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.5.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jool</artifactId>
+            <version>0.9.6</version>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path-assert</artifactId>
+            <version>2.0.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.8.21</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.codepoetics</groupId>
+            <artifactId>protonpack</artifactId>
+            <version>1.7</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+</project>

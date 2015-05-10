@@ -112,7 +112,7 @@ public class ConsoleMain {
     main.run(cfg);
   }
   
-  private static final void removeDirectoryContents(final Path path) {
+  private static void removeDirectoryContents(final Path path) {
     final Set<Path> ignorePaths = getIgnorePaths(path);
     
     try {
@@ -219,12 +219,12 @@ public class ConsoleMain {
   public static final Path IGNORE_FILE = Paths.get(".umpr.core.ignore");
   
   /**
-   * Gets the ignore paths from a folder, if the ignore file exists ({@value #IGNORE_FILE}). If the file exists, the 
+   * Gets the ignore paths from a folder, if the ignore file exists ({@link #IGNORE_FILE}). If the file exists, the
    * {@link Set} returned has all the paths resolved against the {@code folder} parameter including 
-   * {@value #IGNORE_FILE}.
+   * {@link #IGNORE_FILE}.
    * 
    * @param folder Folder to read from
-   * @return Non-{@code null} {@link ImmutableSet} including at least {{@value #IGNORE_FILE}. 
+   * @return Non-{@code null} {@link ImmutableSet} including at least {{@link #IGNORE_FILE}.
    */
   private static Set<Path> getIgnorePaths(final Path folder) {
     final Path ignPath = folder.resolve(IGNORE_FILE);
@@ -247,7 +247,7 @@ public class ConsoleMain {
    * configuration. 
    * 
    * @param cfg Configuration data
-   * @return Non-{@code null}, possibly empty {@link Set} of {@link ImportRuntimeData}. 
+   * @return Non-{@code null}, possibly empty {@link Set} of {@link ImportRuntimeData}.
    * @since Feb 25, 2015
    */
   public Set<ImportFSM> run(final Config cfg) {

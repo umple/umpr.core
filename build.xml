@@ -32,7 +32,7 @@
   <property name="src.dir.gen.umple" value="${src.dir.gen}/umple" />
   <property name="src.dir.test" value="${src.dir}/test" />
   <property name="src.dir.test.java" value="${src.dir.test}/java" />
-  <property name="src.dir.test.resources" value="${src.dir.test}/fixtures" />
+  <property name="src.dir.test.resources" value="${src.dir.test}/resources" />
 
   <!-- distribution -->
   <property name="dist.dir" value="${build.dir}/target" />

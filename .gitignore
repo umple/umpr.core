@@ -5,6 +5,8 @@ lib/
 .classpath
 .settings/
 
+target/
+
 build.properties
 src/gen/
 ivy/
