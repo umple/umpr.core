@@ -194,16 +194,16 @@
   </target>
 
   <target name="clean" description="cleanup module">
-    <delete dir="${build.dir.main}" />
-    <delete dir="${build.dir.test}" />
-    <delete includeemptydirs="true">
+    <delete dir="${build.dir.main}" failonerror="false" />
+    <delete dir="${build.dir.test}" failonerror="false" />
+    <delete includeemptydirs="true" failonerror="false" >
       <fileset dir="${src.dir.gen.umple}" excludes="**/.gitkeep" defaultexcludes="false" />
     </delete>
-    <delete dir="${dist.dir}" />
+    <delete dir="${dist.dir}" failonerror="false" />
   </target>
 
   <target name="real-clean" depends="clean" description="Clean-up everything, including dependencies">
-    <delete dir="${lib.dir}" />
+    <delete dir="${lib.dir}" failonerror="false" />
   </target>
 
   <target name="init" description="Build initialization" depends="install-ivy">

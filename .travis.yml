@@ -4,11 +4,13 @@ jdk:
   - oraclejdk8
 
 before_install:
-
-script:
   # clean up everything first
   - ant -f build.xml real-clean
 
+install:
+  - ant -f build.xml ivy-resolve
+
+script:
   # Compile the project
   - ant -f build.xml compile
 
@@ -18,9 +20,6 @@ script:
   # package it (this should never fail..)
   - ant -f build.xml package
 
-  - mvn package
-
 os:
   - linux
 
-sudo: required
