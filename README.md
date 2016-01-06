@@ -1,6 +1,6 @@
 # umpr.core - Umple Sample Importer 
 
-[![Build Status](https://travis-ci.org/umple-ucosp/umpr.core.svg?branch=master)](https://travis-ci.org/umple-ucosp/umpr.core)
+[![Build Status](https://travis-ci.org/umple/umpr.core.svg?branch=master)](https://travis-ci.org/umple/umpr.core)
 
 Umpr is repository tool for managing the automatic importing of different modelling languages into the 
 [Umple](http://umple.org) language. This project seeks to create a single location for downloading and verifying the 
@@ -16,7 +16,7 @@ umpr.core requires the following components:
 
 1. [Apache Ant](http://ant.apache.org/)
 1. Java 8 -- Oracle is tested, OpenJDK is not, but should work.
-1. A pre-built version of Umple -- [Umple Cheatsheet](https://code.google.com/p/umple/wiki/CheatSheet), the location of
+1. A pre-built version of Umple -- [Umple Cheatsheet](https://github.com/umple/umple/wiki/CheatSheet), the location of
 the `dist/umple.jar` is used in building umpr.core.
 
 ### Building
